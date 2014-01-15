@@ -138,9 +138,10 @@ struct CaffeNet
 
   //void testIO(){ } //dummy example
 
-  //boost::python::list testIO()
-  void testIO()
+  boost::python::list testIO()
+  //void testIO()
   {
+    import_array(); //setup numpy. (this is finnicky: stackoverflow.com/questions/12253389)
 
     int nbPlanes = 1;
     int depth_ = 1;
@@ -151,16 +152,14 @@ struct CaffeNet
 //TODO: start 'array_to_boost()' function here
 
     npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
-
-  //segfault in PyArray_New... trying to debug.
     PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
-    //PyObject* pyramid_float_py = PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
 
     //thanks: http://stackoverflow.com/questions/19185574 
-    //boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
-    //boost::python::list blobs_top_boost; //list to return
-    //blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
- 
+    boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
+    boost::python::list blobs_top_boost; //list to return
+    blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
+
+    return blobs_top_boost; //compile error: return-statement with no value  
   }
 
   // The caffe::Caffe utility functions.
@@ -178,6 +177,8 @@ struct CaffeNet
 // The boost python module definition.
 BOOST_PYTHON_MODULE(pycaffe)
 {
+  //boost::python::converter::registry::insert( &CaffeNet::testIO, type_id<PyArrayObject>()); //try to help testIO to return an object?
+
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
       .def("Forward",         &CaffeNet::Forward)
