@@ -136,9 +136,31 @@ struct CaffeNet
     }
   }
 
-  //TODO: add a return statement
-  void testIO(){
+  //void testIO(){ } //dummy example
 
+  //boost::python::list testIO()
+  void testIO()
+  {
+
+    int nbPlanes = 1;
+    int depth_ = 1;
+    int MaxHeight_ = 10;
+    int MaxWidth_ = 10;
+
+    float* pyramid_float = (float*)malloc(sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
+//TODO: start 'array_to_boost()' function here
+
+    npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
+
+  //segfault in PyArray_New... trying to debug.
+    PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+    //PyObject* pyramid_float_py = PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+
+    //thanks: http://stackoverflow.com/questions/19185574 
+    //boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
+    //boost::python::list blobs_top_boost; //list to return
+    //blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
+ 
   }
 
   // The caffe::Caffe utility functions.

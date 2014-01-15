@@ -34,6 +34,16 @@ def test_pyramid_IO(caffenet, imgFname):
     #example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
     #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
 
+'''
+def featpyramid(caffenet, imgFname, [params]):
+    stitched_pyra = caffenet.extract_featpyramid(imgFname, [params])    
+
+    pyra = unstitch_pyra(stitched_pyra) #alternatively, do this in C++ inside extract_featpyramid()
+
+    return pyra
+'''
+
+
 if __name__ == "__main__":
 
     #pretend that these flags came off the command line:
