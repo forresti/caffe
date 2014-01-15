@@ -136,6 +136,11 @@ struct CaffeNet
     }
   }
 
+  //TODO: add a return statement
+  void testIO(){
+
+  }
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -160,5 +165,6 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_phase_train", &CaffeNet::set_phase_train)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
+      .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
   ;
 }

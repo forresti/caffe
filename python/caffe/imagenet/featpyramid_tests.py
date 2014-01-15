@@ -26,14 +26,29 @@ import caffe
 # padding amount
 # [batchsize is defined in prototxt... fine.]
 
+#hopefully caffenet is passed by ref...
+def test_pyramid_IO(caffenet, imgFname):
+    #TODO
+
+    caffenet.testIO()
+    #example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
+    #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
 
 if __name__ == "__main__":
-    imgFname = './pascal_009959.jpg'
 
+    #pretend that these flags came off the command line:
+    imgFname = './pascal_009959.jpg'
     model_def = '../../../examples/imagenet_deploy.prototxt' 
     pretrained_model = '../../../alexnet_train_iter_470000'
-
+    use_gpu = True
     
+    caffenet = caffe.CaffeNet(model_def, pretrained_model)
+    caffenet.set_phase_test()
+    if use_gpu:
+        caffenet.set_mode_gpu()
 
+
+    #experiments...
+    test_pyramid_IO(caffenet, imgFname)
 
 
