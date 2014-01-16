@@ -6,7 +6,7 @@ OBJS = JPEGPyramid.o JPEGImage.o Patchwork.o Rectangle.o PyramidStitcher.o
 all:	libPyramidStitcher.so test_stitch_pyramid
 
 # *** test suite ***
-test_stitch_pyramid: test_stitch_pyramid.o
+test_stitch_pyramid: test_stitch_pyramid.o libPyramidStitcher.so
 	$(CXX) -o test_stitch_pyramid test_stitch_pyramid.o -lPyramidStitcher $(LDLIBS)
 
 # OLD: link directly with .o files instead of linking with PyramidStitcher.so

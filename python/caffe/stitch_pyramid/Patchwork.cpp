@@ -42,14 +42,13 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 Patchwork::Patchwork(const JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
-	// Remove the padding from the bottom/right sides since convolutions with Fourier wrap around
-	const int nbLevels = pyramid.levels().size();
-    //cout << "    nbLevels = " << nbLevels << endl;
+    nbScales = pyramid.levels().size(); //Patchwork class variable
+    //cout << "    nbScales = " << nbScales << endl;
     //printf("    MaxRows_ = %d, MaxCols_=%d \n", MaxRows_, MaxCols_);
 	
-	rectangles_.resize(nbLevels);
+	rectangles_.resize(nbScales);
 	
-	for (int i = 0; i < nbLevels; ++i) {
+	for (int i = 0; i < nbScales; ++i) {
         rectangles_[i].first.setWidth(pyramid.levels()[i].width()); //stitching includes padding in the img size.
         rectangles_[i].first.setHeight(pyramid.levels()[i].height());
 	}
@@ -73,7 +72,7 @@ interval_(pyramid.interval())
     // [Forrest implemented... ]
     //COPY scaled images -> fixed-size planes
 #pragma omp parallel for
-    for (int i = 0; i < nbLevels; ++i) {
+    for (int i = 0; i < nbScales; ++i) {
 
         //currPlane is destination
         JPEGImage* currPlane = &planes_[rectangles_[i].second]; //TODO: make sure my dereferencing makes sense. (trying to avoid deepcopy)

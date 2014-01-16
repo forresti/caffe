@@ -93,6 +93,7 @@ public:
 	static int MaxCols();
 
     std::vector<Plane> planes_;
+    int nbScales;
 	
 private:
 	// Bottom-Left fill algorithm
@@ -103,7 +104,7 @@ private:
 	int interval_;
 	std::vector<std::pair<Rectangle, int> > rectangles_;
 	
-	static int MaxRows_;
+	static int MaxRows_; //TODO: make these public.
 	static int MaxCols_;
 	static int HalfCols_;
 };
