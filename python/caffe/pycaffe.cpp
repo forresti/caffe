@@ -8,6 +8,7 @@
 #include <boost/python.hpp>
 #include <numpy/arrayobject.h>
 #include "caffe/caffe.hpp"
+#include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 
 // Temporary solution for numpy < 1.7 versions: old macro.
 #ifndef NPY_ARRAY_C_CONTIGUOUS
@@ -180,7 +181,13 @@ struct CaffeNet
     printf("    int from python: %d \n", i);
   }
 
+  void extract_featpyramid(string file){
 
+    int padding = 8;
+    int interval = 10;
+    Patchwork patchwork = stitch_pyramid(file, padding, interval); 
+
+  }
 
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
@@ -211,5 +218,6 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
       .def("testString",      &CaffeNet::testString) 
       .def("testInt",         &CaffeNet::testInt)
+      .def("extract_featpyramid",         &CaffeNet::extract_featpyramid) //NEW
   ;
 }
