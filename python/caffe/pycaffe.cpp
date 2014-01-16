@@ -138,24 +138,35 @@ struct CaffeNet
 
   //void testIO(){ } //dummy example
 
-  boost::python::list testIO()
-  //void testIO()
-  {
-    import_array(); //setup numpy. (this is finnicky: stackoverflow.com/questions/12253389)
 
+  //float* -> numpy -> boost python (which can be returned to Python)
+  boost::python::object array_to_boostPython_4d(float* pyramid_float, 
+                                                int nbPlanes, int depth_, int MaxHeight_, int MaxWidth_)
+  {
+
+    npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
+    PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+
+    //thanks: stackoverflow.com/questions/19185574 
+    boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
+    return pyramid_float_py_boost;
+  } 
+
+  //return a list containing one 4D numpy/boost array. (toy example)
+  boost::python::list testIO()
+  {
     int nbPlanes = 1;
     int depth_ = 1;
     int MaxHeight_ = 10;
     int MaxWidth_ = 10;
 
+    //prepare data that we'll send to Python
     float* pyramid_float = (float*)malloc(sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
-//TODO: start 'array_to_boost()' function here
+    memset(pyramid_float, 0, sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
+    pyramid_float[10] = 123; //test -- see if it shows up in Python
 
-    npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
-    PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+    boost::python::object pyramid_float_py_boost = array_to_boostPython_4d(pyramid_float, nbPlanes, depth_, MaxHeight_, MaxWidth_);
 
-    //thanks: http://stackoverflow.com/questions/19185574 
-    boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
     boost::python::list blobs_top_boost; //list to return
     blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
 
@@ -177,6 +188,7 @@ struct CaffeNet
 // The boost python module definition.
 BOOST_PYTHON_MODULE(pycaffe)
 {
+  import_array(); //setup numpy. (this is finnicky: stackoverflow.com/questions/12253389)
   //boost::python::converter::registry::insert( &CaffeNet::testIO, type_id<PyArrayObject>()); //try to help testIO to return an object?
 
   boost::python::class_<CaffeNet>(

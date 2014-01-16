@@ -30,10 +30,12 @@ import caffe
 def test_pyramid_IO(caffenet, imgFname):
     #TODO
 
-    caffenet.testIO()
-    #example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
+    #caffenet.testIO()
+    example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
     #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
 
+    print example_np_array
+    print example_np_array[0].shape
 '''
 def featpyramid(caffenet, imgFname, [params]):
     stitched_pyra = caffenet.extract_featpyramid(imgFname, [params])    
