@@ -138,7 +138,6 @@ struct CaffeNet
 
   //void testIO(){ } //dummy example
 
-
   //float* -> numpy -> boost python (which can be returned to Python)
   boost::python::object array_to_boostPython_4d(float* pyramid_float, 
                                                 int nbPlanes, int depth_, int MaxHeight_, int MaxWidth_)
@@ -173,6 +172,16 @@ struct CaffeNet
     return blobs_top_boost; //compile error: return-statement with no value  
   }
 
+  void testString(string st){
+    printf("    string from python: %s \n", st.c_str());
+  }
+
+  void testInt(int i){
+    printf("    int from python: %d \n", i);
+  }
+
+
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -183,7 +192,6 @@ struct CaffeNet
   // The pointer to the internal caffe::Net instant.
 	shared_ptr<Net<float> > net_;
 };
-
 
 // The boost python module definition.
 BOOST_PYTHON_MODULE(pycaffe)
@@ -201,5 +209,7 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
       .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
+      .def("testString",      &CaffeNet::testString) 
+      .def("testInt",         &CaffeNet::testInt)
   ;
 }

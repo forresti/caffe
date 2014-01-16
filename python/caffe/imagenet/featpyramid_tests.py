@@ -36,6 +36,9 @@ def test_pyramid_IO(caffenet, imgFname):
 
     print example_np_array
     print example_np_array[0].shape
+
+    caffenet.testString('hi')
+    caffenet.testInt(1337)
 '''
 def featpyramid(caffenet, imgFname, [params]):
     stitched_pyra = caffenet.extract_featpyramid(imgFname, [params])    
