@@ -1,5 +1,5 @@
 CXX = g++
-CFLAGS = -g -fopenmp -O3 -fPIC -I/usr/local/include/ -I.. -I../eigen 
+CFLAGS = -g -fopenmp -O3 -fPIC -I/usr/local/include/ -I..  
 LDLIBS = -g -lgomp -ljpeg 
 #OBJS = JPEGPyramid.o JPEGImage.o Patchwork.o Rectangle.o PyramidStitcher.o test_stitch_pyramid.o
 OBJS = JPEGPyramid.o JPEGImage.o Patchwork.o Rectangle.o PyramidStitcher.o

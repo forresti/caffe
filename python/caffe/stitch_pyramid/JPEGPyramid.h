@@ -23,7 +23,7 @@
 
 #include "JPEGImage.h"
 
-#include <Eigen/Core>
+//#include <Eigen/Core>
 //#include <Eigen/Sparse>
 
 namespace FFLD
@@ -51,7 +51,7 @@ public:
 #endif
 
 	/// Type of a matrix.
-	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
+	//typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
 
 #if 0	
 	/// Type of a sparse matrix.

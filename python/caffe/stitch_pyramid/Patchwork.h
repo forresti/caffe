@@ -33,7 +33,7 @@ class Patchwork
 {
 public:
 	/// Type of a scalar value.
-	typedef std::complex<JPEGPyramid::Scalar> Scalar;
+	//typedef std::complex<JPEGPyramid::Scalar> Scalar;
 
 #if 0	
 	/// Type of a matrix.
@@ -76,10 +76,10 @@ public:
 	/// Returns the convolutions of the patchwork with filters (useful to compute the SVM margins).
 	/// @param[in] filters The filters.
 	/// @param[out] convolutions The convolutions (filters x levels).
-	void convolve(const std::vector<Filter> & filters,
-				  std::vector<std::vector<JPEGPyramid::Matrix> > & convolutions) const;
+	//void convolve(const std::vector<Filter> & filters,
+	//			  std::vector<std::vector<JPEGPyramid::Matrix> > & convolutions) const;
 	
-	/// Initializes the FFTW library.
+	/// Initializes the data structures.
 	/// @param[in] maxRows Maximum number of rows of a pyramid level (including padding).
 	/// @param[in] maxCols Maximum number of columns of a pyramid level (including padding).
 	/// @returns Whether the initialization was successful.

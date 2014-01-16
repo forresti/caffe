@@ -130,7 +130,7 @@ bool Patchwork::Init(int maxRows, int maxCols)
 		return false;
 	
 	// Temporary matrices
-	JPEGPyramid::Matrix tmp(maxRows * JPEGPyramid::NbChannels, maxCols + 2);
+	//JPEGPyramid::Matrix tmp(maxRows * JPEGPyramid::NbChannels, maxCols + 2);
 	
 	int dims[2] = {maxRows, maxCols};
     MaxRows_ = maxRows;
