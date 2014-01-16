@@ -14,24 +14,9 @@ using namespace std;
 
 //TODO: have a pyramid stitch class?
 
-
-//e.g. file = ../../images_640x480/carsgraz_001.image.jpg
-string parse_base_filename(string file){
-    size_t lastSlash = file.find_last_of("/\\");
-    size_t lastDot = file.find_last_of('.');
-
-    string base_filename = file.substr(lastSlash, lastDot-lastSlash); // /carsgraz_001.image
-    return base_filename;
-}
-
-
-
 //int main(int argc, char * argv[])
 Patchwork stitch_pyramid(string file, int padding=8, int interval=10)
 {
-    string base_filename = parse_base_filename(file);
-    printf("    base_filename = %s \n", base_filename.c_str());
- 
 	JPEGImage image(file);
     if (image.empty()) {
         cerr << "\nInvalid image " << file << endl;
