@@ -27,7 +27,7 @@
 #include <set>
 #include <iostream>
 
-using namespace Eigen;
+//using namespace Eigen;
 using namespace FFLD;
 using namespace std;
 

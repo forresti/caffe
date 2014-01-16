@@ -152,46 +152,6 @@ int main(int argc, char * argv[]){
     printf("    output_stitched_dir = %s \n", output_stitched_dir.c_str());
 
     Patchwork patchwork = stitch_pyramid(file, padding, interval);
-
-#if 0 
-	JPEGImage image(file);
-    if (image.empty()) {
-        showUsage();
-        cerr << "\nInvalid image " << file << endl;
-        return -1;
-    }
-
-    //image = image.resize(image.width()*4, image.height()*4); //UPSAMPLE so that Caffe's 16x downsampling looks like 4x downsampling
-    image = image.resize(image.width()*2, image.height()*2); //UPSAMPLE so that Caffe's 16x downsampling looks like 8x downsampling
-
-  // Compute the downsample+stitch
-    double start_downsample = read_timer();    
-
-    JPEGPyramid pyramid(image, padding, padding, interval); //DOWNSAMPLE with (padx == pady == padding)
-
-    if (pyramid.empty()) {
-        showUsage();
-        cerr << "\nInvalid image " << file << endl;
-        return -1;
-    }
-    
-    double time_downsample = read_timer() - start_downsample;
-    cout << "  Multiscale downsampling in " << time_downsample << " ms" << endl;
-
-    double start_stitch = read_timer();
-
-    int planeWidth = (pyramid.levels()[0].width() + 15) & ~15; //TODO: don't subtract padx, pady? 
-    int planeHeight = (pyramid.levels()[0].height() + 15) & ~15; 
-    planeWidth = max(planeWidth, planeHeight);  //SQUARE planes for Caffe convnet
-    planeHeight = max(planeWidth, planeHeight);
-
-    Patchwork::Init(planeHeight, planeWidth); 
-    const Patchwork patchwork(pyramid); //STITCH
-
-    double time_stitch = read_timer() - start_stitch;
-    cout << "  Stitched scales in " << time_stitch << " ms" << endl;
-#endif
-
     //printScaleSizes(pyramid);
     //writePyraToJPG(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg
