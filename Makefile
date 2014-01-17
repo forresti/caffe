@@ -98,8 +98,13 @@ test: $(TEST_BINS)
 examples: $(EXAMPLE_BINS)
 
 pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) 
-	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid/build -I./python/caffe/stitch_pyramid \
+	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+
+#pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) 
+#	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -I./python/caffe/stitch_pyramid \
+#		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+
 
 matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC)
 	$(MATLAB_DIR)/bin/mex $(MATCAFFE_SRC) $(STATIC_NAME) \
