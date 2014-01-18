@@ -282,10 +282,30 @@ struct CaffeNet
     blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
 
    //setup slice ("view") of numpy array
-    boost::python::list blobs_top_boost_view;
+    int sliceHeight_min = 3;
+    int sliceHeight_max = 5;
+    int sliceHeight = sliceHeight_max - sliceHeight_min;
+    int sliceWidth_min = 2;
+    int sliceWidth_max = 9;
+    int sliceWidth = sliceWidth_max - sliceWidth_min;
+    npy_intp view_dims[4]    = {batchsize, depth_, sliceHeight, sliceWidth}; //in floats
 
-    //return blobs_top_boost_view; //compile error: return-statement with no value  
-    return blobs_top_boost;
+    //this is a view of a slice of pyramid_float. (TODO: access via PyArray_DATA(pyramid_float_npy_boost ...)
+    //PyArrayObject* view_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, strides, (float*)PyArray_DATA(pyramid_float_npy_boost.ptr()) + sliceWidth_min, 0, 0, 0 ); 
+    PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT, 
+                                                          PyArray_STRIDES(pyramid_float_npy_boost.ptr()), 
+                                                          (float *)PyArray_GETPTR4(pyramid_float_npy_boost.ptr(), 
+                                                          0, 0, sliceHeight_min, sliceWidth_min), 0, 0, 0 );
+
+    Py_INCREF(pyramid_float_npy_boost.ptr()); //PyArray_SetBaseObject steals a reference
+    assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure
+
+    boost::python::list blobs_top_boost_view;
+    boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy)); 
+    blobs_top_boost_view.append(view_npy_boost);
+
+    return blobs_top_boost_view; //compile error: return-statement with no value  
+    //return blobs_top_boost;
   }
 
 
