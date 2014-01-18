@@ -194,7 +194,7 @@ struct CaffeNet
     return resultPlane;
   }
 
-  //void extract_featpyramid(string file){
+   //void extract_featpyramid(string file){
   boost::python::list extract_featpyramid(string file){
 
     int padding = 8;
@@ -203,7 +203,7 @@ struct CaffeNet
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
-    //TODO: verify that top-upsampled version of input img fits within planeDim
+    //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
     //TODO: think about how to use image_mean.
     //        ignoring image_mean for now, because the 'subtract image mean from whatever input region we get'
@@ -221,6 +221,9 @@ struct CaffeNet
     boost::python::list blobs_bottom; //input to Caffe::Forward
     blobs_bottom.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
 
+    //TODO: make an option (or separate function) to pull out blobs_bottom to python here.
+    //      (for debugging -- make sure the planes are stitched properly. have done a reasonable job verifying this so far.)
+
     //prep output space
     //PyArrayObject* resultPlane_npy = (PyArrayObject*)PyArray_NewLikeArray(currPlane_npy, NPY_KEEPORDER, NULL, 1); //same size/shape as currPlane_npy
     PyArrayObject* resultPlane_npy = allocate_resultPlane(); //gets resultPlane dims from shared ptr to net_->output_blobs()
@@ -232,8 +235,8 @@ struct CaffeNet
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
-    return blobs_bottom; //for debugging only (stitched pyramid in RGB)
-    //return blobs_top; //output plane(s)
+    //return blobs_bottom; //for debugging only (stitched pyramid in RGB)
+    return blobs_top; //output plane(s)
   }
 
   //void testIO(){ } //dummy example
@@ -258,6 +261,33 @@ struct CaffeNet
 
     return blobs_top_boost; //compile error: return-statement with no value  
   }
+
+  //return a slice ("view") of a numpy array
+  boost::python::list test_NumpyView()
+  {
+    int batchsize = 1;
+    int depth_ = 3;
+    int MaxHeight_ = 10;
+    int MaxWidth_ = 10;
+
+   //setup numpy array
+    float* pyramid_float = (float*)malloc(sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
+    memset(pyramid_float, 0, sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
+
+    for(int i=0; i<batchsize*depth_*MaxHeight_*MaxWidth_; i++)
+        pyramid_float[i] = i;
+
+    boost::python::object pyramid_float_npy_boost = array_to_boostPython_4d(pyramid_float, batchsize, depth_, MaxHeight_, MaxWidth_);
+    boost::python::list blobs_top_boost; //list to return
+    blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
+
+   //setup slice ("view") of numpy array
+    boost::python::list blobs_top_boost_view;
+
+    //return blobs_top_boost_view; //compile error: return-statement with no value  
+    return blobs_top_boost;
+  }
+
 
   void testString(string st){
     printf("    string from python: %s \n", st.c_str());
@@ -294,6 +324,7 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
       .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
+      .def("test_NumpyView",          &CaffeNet::test_NumpyView) //Forrest's test (return view of a numpy array)
       .def("testString",      &CaffeNet::testString) 
       .def("testInt",         &CaffeNet::testInt)
       .def("extract_featpyramid",         &CaffeNet::extract_featpyramid) //NEW

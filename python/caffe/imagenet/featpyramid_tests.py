@@ -27,8 +27,9 @@ import pylab
 
 #hopefully caffenet is passed by ref...
 def test_pyramid_IO(caffenet, imgFname):
-    example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
+    #example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
     #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
+    example_np_array = caffenet.test_NumpyView()
 
     print example_np_array
     print example_np_array[0].shape
@@ -40,7 +41,8 @@ def test_featpyramid(caffenet, imgFname):
 
     #blobs_bottom = features computed on PLANES.
     blobs_bottom = caffenet.extract_featpyramid(imgFname) # THE CRUX 
-    print blobs_bottom[0]
+
+    #print blobs_bottom[0]
     print 'blobs shape: '
     print blobs_bottom[0].shape
 
@@ -74,6 +76,5 @@ if __name__ == "__main__":
 
     #experiments...
     test_pyramid_IO(caffenet, imgFname)
-
-    test_featpyramid(caffenet, imgFname)
+    #test_featpyramid(caffenet, imgFname)
 
