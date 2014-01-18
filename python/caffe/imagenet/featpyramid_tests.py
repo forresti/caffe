@@ -76,5 +76,5 @@ if __name__ == "__main__":
 
     #experiments...
     test_pyramid_IO(caffenet, imgFname)
-    #test_featpyramid(caffenet, imgFname)
+    test_featpyramid(caffenet, imgFname)
 
