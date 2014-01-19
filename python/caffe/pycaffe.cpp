@@ -239,8 +239,6 @@ struct CaffeNet
     return blobs_top; //output plane(s)
   }
 
-  //void testIO(){ } //dummy example
-
   //return a list containing one 4D numpy/boost array. (toy example)
   boost::python::list testIO()
   {
