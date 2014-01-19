@@ -65,7 +65,7 @@ interval_(pyramid.interval())
     #pragma omp parallel for
 	for (int i = 0; i < nbPlanes; ++i) {
         planes_[i] = JPEGImage(MaxCols_, MaxRows_, JPEGPyramid::NbChannels);     //JPEGImage(width, height, depth)
-        planes_[i].fill_with_rand(); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
+        //planes_[i].fill_with_rand(); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
 	}
 
     int depth = JPEGPyramid::NbChannels;
