@@ -39,32 +39,6 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 {
 }
 
-//thanks: http://stackoverflow.com/questions/11641629/generating-a-uniform-distribution-of-integers-in-c
-//uniform_distribution returns an INTEGER in [rangeLow, rangeHigh], inclusive.
-int uniform_distribution(int rangeLow, int rangeHigh)
-{
-    int myRand = (int)rand(); 
-    int range = rangeHigh - rangeLow + 1; //+1 makes it [rangeLow, rangeHigh], inclusive.
-    int myRand_scaled = (myRand % range) + rangeLow;
-    return myRand_scaled;
-}
-
-//to avoid hard borders on images in plane (which look like edges to the convnet)
-void fill_with_rand(JPEGImage& plane){
-    int height = plane.height();
-    int width = plane.width();
-    int depth = JPEGPyramid::NbChannels;
-
-    for (int y = 0; y < height; y++){
-        for (int x = 0; x < width; x++){
-            for (int ch = 0; ch < depth; ch++){
-
-                plane.bits()[y*width*depth + x*depth + ch] = (uint8_t)uniform_distribution(0, 255);
-            }
-        }
-    }
-}
-
 Patchwork::Patchwork(const JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
@@ -88,9 +62,10 @@ interval_(pyramid.interval())
 		return;
 	
 	planes_.resize(nbPlanes);
+    #pragma omp parallel for
 	for (int i = 0; i < nbPlanes; ++i) {
         planes_[i] = JPEGImage(MaxCols_, MaxRows_, JPEGPyramid::NbChannels);     //JPEGImage(width, height, depth)
-        fill_with_rand(planes_[i]); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
+        planes_[i].fill_with_rand(); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
 	}
 
     int depth = JPEGPyramid::NbChannels;
