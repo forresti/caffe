@@ -201,32 +201,32 @@ struct CaffeNet
   // @return a list of numpy 'views', one list element per scale. 
   boost::python::list unstitch_planes(vector<ScaleLocation> scaleLocs, boost::python::list descriptor_planes, int depth){
 
-    boost::python::list unstitched_planes;
+    boost::python::list unstitched_features;
     int nbScales = scaleLocs.size();
     int batchsize = 1; //TODO: assert that batchsize really is 1.
 
-    for(int i=0; i<nbScales; i++){
+    for(int i=0; i<nbScales; i++) //go from largest to smallest scale
+    { 
 
       int planeID = scaleLocs[i].planeID;
-      npy_intp view_dims[4]    = {batchsize, depth, scaleLocs[i].height, scaleLocs[i].width}; //in floats
-#if 0
+      PyArrayObject* currPlane_npy = (PyArrayObject*)((boost::python::object)descriptor_planes[planeID]).ptr();
+      npy_intp view_dims[4] = {batchsize, depth, scaleLocs[i].height, scaleLocs[i].width}; //in floats
+
       //setup slice ("view") of numpy array
       PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
-                                                            PyArray_STRIDES(descriptor_planes[planeID].ptr()),
-                                                            (float *)PyArray_GETPTR4(descriptor_planes[planeID].ptr(), 
+                                                            PyArray_STRIDES(currPlane_npy),
+                                                            (float *)PyArray_GETPTR4(currPlane_npy, 
                                                                                      0, 0, scaleLocs[i].yMin, scaleLocs[i].xMin), 
                                                             0, 0, 0 );
-
-      Py_INCREF(pyramid_float_npy_boost.ptr()); //PyArray_SetBaseObject steals a reference
+      Py_INCREF(currPlane_npy); //PyArray_SetBaseObject steals a reference
       assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure
 
       boost::python::list blobs_top_boost_view;
       boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy));
-      blobs_top_boost_view.append(view_npy_boost);
-#endif
+      unstitched_features.append(view_npy_boost);
     }
 
-    return unstitched_planes;
+    return unstitched_features;
   }
 
    //void extract_featpyramid(string file){
@@ -236,6 +236,7 @@ struct CaffeNet
     int interval = 10;
     int convnet_subsampling_ratio = 16; //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
+    int resultDepth = net_->output_blobs()[0]->channels();
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
@@ -278,9 +279,11 @@ struct CaffeNet
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
     vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+    boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
 
     //return blobs_bottom; //for debugging only (stitched pyramid in RGB)
-    return blobs_top; //output plane(s)
+    //return blobs_top; //output plane(s)
+    return unstitched_features; //unstitched pyramid from output plane(s)
   }
 
   //return a list containing one 4D numpy/boost array. (toy example)
