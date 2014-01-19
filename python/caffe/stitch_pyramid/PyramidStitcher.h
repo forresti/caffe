@@ -34,6 +34,8 @@ class ScaleLocation{
 Patchwork stitch_pyramid(string file, int padding=8, int interval=10, int planeDim=-1);
 
 // coordinates for unstitching the feature descriptors from planes.
+//      sorted in descending order of size. 
+//        (well, Patchwork sorts in descending order of size, and that survives here.)
 vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
                                                  int convnet_subsampling_ratio);
 
