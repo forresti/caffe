@@ -44,12 +44,12 @@ def test_featpyramid(caffenet, imgFname):
 
     #print blobs_bottom[0]
     print 'blobs shape: '
-    print blobs_bottom[0].shape
+    print blobs_bottom[1].shape
 
     #TODO: tweak extract_featpyramid to unstitch planes -> descriptor pyramid
 
     #prep for visualization (sum over depth of descriptors)
-    flat_descriptor = np.sum(blobs_bottom[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+    flat_descriptor = np.sum(blobs_bottom[1], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
     flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
 
     #visualization

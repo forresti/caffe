@@ -194,11 +194,22 @@ struct CaffeNet
     return resultPlane;
   }
 
+  // @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
+  // @return a list of numpy 'views', one list element per scale. 
+  boost::python::list unstitch_planes(vector<ScaleLocation> scaleLocations, boost::python::list descriptor_planes){
+
+    boost::python::list unstitched_planes;
+    //stub
+
+    return unstitched_planes;
+  }
+
    //void extract_featpyramid(string file){
   boost::python::list extract_featpyramid(string file){
 
     int padding = 8;
     int interval = 10;
+    int convnet_subsampling_ratio = 16; //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
@@ -210,32 +221,39 @@ struct CaffeNet
     //        thing in r-cnn feels kinda silly.
  
     Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
-
-    int planeID = 0; //TODO: append multiple blobs to blobs_{top,bottom}, iterating to planes_.size()
+    int nbPlanes = patchwork.planes_.size();
+    //int planeID = 0; //TODO: append multiple blobs to blobs_{top,bottom}, iterating to planes_.size()
                      //         then, run Forward() on the list of blobs.
 
-    //prep input data
-    JPEGImage* currPlane = &(patchwork.planes_[planeID]);
-    PyArrayObject* currPlane_npy = JPEGImage_to_numpy_float(*currPlane); //TODO: agree on dereference and/or pass-by-ref JPEGImage currPlane
-    boost::python::object currPlane_npy_boost(boost::python::handle<>((PyObject*)currPlane_npy)); //numpy -> wrap in boost
-    boost::python::list blobs_bottom; //input to Caffe::Forward
-    blobs_bottom.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
-
-    //TODO: make an option (or separate function) to pull out blobs_bottom to python here.
-    //      (for debugging -- make sure the planes are stitched properly. have done a reasonable job verifying this so far.)
-
-    //prep output space
-    //PyArrayObject* resultPlane_npy = (PyArrayObject*)PyArray_NewLikeArray(currPlane_npy, NPY_KEEPORDER, NULL, 1); //same size/shape as currPlane_npy
-    PyArrayObject* resultPlane_npy = allocate_resultPlane(); //gets resultPlane dims from shared ptr to net_->output_blobs()
-    boost::python::object resultPlane_npy_boost(boost::python::handle<>((PyObject*)resultPlane_npy)); //numpy -> wrap in boost
-    boost::python::list blobs_top; //output buffer for Caffe::Forward
-    blobs_top.append(resultPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
     
-    Forward(blobs_bottom, blobs_top); //lists of blobs... bottom=input planes, top=output descriptors
+    boost::python::list blobs_top; //output buffer(s) for Caffe::Forward
+
+    //prep input data for Caffe feature extraction    
+    for(int planeID=0; planeID<nbPlanes; planeID++){
+      JPEGImage* currPlane = &(patchwork.planes_[planeID]);
+      PyArrayObject* currPlane_npy = JPEGImage_to_numpy_float(*currPlane); //TODO: agree on dereference and/or pass-by-ref JPEGImage currPlane
+      boost::python::object currPlane_npy_boost(boost::python::handle<>((PyObject*)currPlane_npy)); //numpy -> wrap in boost
+      boost::python::list blobs_bottom_tmp; //input to Caffe::Forward
+      blobs_bottom_tmp.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
+
+      //TODO: make an option (or separate function) to pull out blobs_bottom to python here.
+      //      (for debugging -- make sure the planes are stitched properly. have done a reasonable job verifying this so far.)
+
+      //prep output space
+      PyArrayObject* resultPlane_npy = allocate_resultPlane(); //gets resultPlane dims from shared ptr to net_->output_blobs()
+      boost::python::object resultPlane_npy_boost(boost::python::handle<>((PyObject*)resultPlane_npy)); //numpy -> wrap in boost
+      boost::python::list blobs_top_tmp; //output buffer for Caffe::Forward
+      blobs_top_tmp.append(resultPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
+      blobs_top.append(resultPlane_npy_boost); //for long-term keeping (return a list that might be longer than 1)
+
+      Forward(blobs_bottom_tmp, blobs_top_tmp); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
+    }
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
-    //return blobs_bottom; //for debugging only (stitched pyramid in RGB)
+    vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+
+    //return blobs_bottom_tmp; //for debugging only (stitched pyramid in RGB)
     return blobs_top; //output plane(s)
   }
 
