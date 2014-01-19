@@ -39,17 +39,17 @@ def test_pyramid_IO(caffenet, imgFname):
 
 def test_featpyramid(caffenet, imgFname):
 
-    #blobs_bottom = features computed on PLANES.
-    blobs_bottom = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+    #blobs_top = features computed on PLANES.
+    blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
 
-    #print blobs_bottom[0]
+    #print blobs_top[0]
     print 'blobs shape: '
-    print blobs_bottom[1].shape
+    print blobs_top[0].shape
 
     #TODO: tweak extract_featpyramid to unstitch planes -> descriptor pyramid
 
     #prep for visualization (sum over depth of descriptors)
-    flat_descriptor = np.sum(blobs_bottom[1], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+    flat_descriptor = np.sum(blobs_top[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
     flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
 
     #visualization

@@ -194,12 +194,37 @@ struct CaffeNet
     return resultPlane;
   }
 
+  // @param scaleLocs = location of each scale on planes (see unstitch_pyramid_locations in PyramidStitcher.cpp)
   // @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
+  //          typically, descriptor_planes = blobs_top.
+  // @param depth = #channels (typically 256 for conv5)
   // @return a list of numpy 'views', one list element per scale. 
-  boost::python::list unstitch_planes(vector<ScaleLocation> scaleLocations, boost::python::list descriptor_planes){
+  boost::python::list unstitch_planes(vector<ScaleLocation> scaleLocs, boost::python::list descriptor_planes, int depth){
 
     boost::python::list unstitched_planes;
-    //stub
+    int nbScales = scaleLocs.size();
+    int batchsize = 1; //TODO: assert that batchsize really is 1.
+
+    for(int i=0; i<nbScales; i++){
+
+      int planeID = scaleLocs[i].planeID;
+      npy_intp view_dims[4]    = {batchsize, depth, scaleLocs[i].height, scaleLocs[i].width}; //in floats
+#if 0
+      //setup slice ("view") of numpy array
+      PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
+                                                            PyArray_STRIDES(descriptor_planes[planeID].ptr()),
+                                                            (float *)PyArray_GETPTR4(descriptor_planes[planeID].ptr(), 
+                                                                                     0, 0, scaleLocs[i].yMin, scaleLocs[i].xMin), 
+                                                            0, 0, 0 );
+
+      Py_INCREF(pyramid_float_npy_boost.ptr()); //PyArray_SetBaseObject steals a reference
+      assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure
+
+      boost::python::list blobs_top_boost_view;
+      boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy));
+      blobs_top_boost_view.append(view_npy_boost);
+#endif
+    }
 
     return unstitched_planes;
   }
@@ -207,7 +232,7 @@ struct CaffeNet
    //void extract_featpyramid(string file){
   boost::python::list extract_featpyramid(string file){
 
-    int padding = 8;
+    int padding = 16;
     int interval = 10;
     int convnet_subsampling_ratio = 16; //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
@@ -225,7 +250,7 @@ struct CaffeNet
     //int planeID = 0; //TODO: append multiple blobs to blobs_{top,bottom}, iterating to planes_.size()
                      //         then, run Forward() on the list of blobs.
 
-    
+    boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
     boost::python::list blobs_top; //output buffer(s) for Caffe::Forward
 
     //prep input data for Caffe feature extraction    
@@ -235,6 +260,7 @@ struct CaffeNet
       boost::python::object currPlane_npy_boost(boost::python::handle<>((PyObject*)currPlane_npy)); //numpy -> wrap in boost
       boost::python::list blobs_bottom_tmp; //input to Caffe::Forward
       blobs_bottom_tmp.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
+      blobs_bottom.append(currPlane_npy_boost); //for long-term keeping (return a list that might be longer than 1)
 
       //TODO: make an option (or separate function) to pull out blobs_bottom to python here.
       //      (for debugging -- make sure the planes are stitched properly. have done a reasonable job verifying this so far.)
@@ -253,7 +279,7 @@ struct CaffeNet
 
     vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
 
-    //return blobs_bottom_tmp; //for debugging only (stitched pyramid in RGB)
+    //return blobs_bottom; //for debugging only (stitched pyramid in RGB)
     return blobs_top; //output plane(s)
   }
 
@@ -306,12 +332,21 @@ struct CaffeNet
     int sliceWidth = sliceWidth_max - sliceWidth_min;
     npy_intp view_dims[4]    = {batchsize, depth_, sliceHeight, sliceWidth}; //in floats
 
-    //this is a view of a slice of pyramid_float. (TODO: access via PyArray_DATA(pyramid_float_npy_boost ...)
+    //this is a view of a slice of pyramid_float. 
     //PyArrayObject* view_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, strides, (float*)PyArray_DATA(pyramid_float_npy_boost.ptr()) + sliceWidth_min, 0, 0, 0 ); 
+
+#if 1 //view of boost::object
     PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT, 
-                                                          PyArray_STRIDES(pyramid_float_npy_boost.ptr()), 
-                                                          (float *)PyArray_GETPTR4(pyramid_float_npy_boost.ptr(), 
-                                                          0, 0, sliceHeight_min, sliceWidth_min), 0, 0, 0 );
+                                                          PyArray_STRIDES(pyramid_float_npy_boost.ptr()), //dim of array that we're slicing
+                                                          (float *)PyArray_GETPTR4(pyramid_float_npy_boost.ptr(), 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
+                                                          0, 0, 0 );
+#endif
+#if 0 //view of boost::list[0] ... does not compile (asking Matt)
+    PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
+                                                          PyArray_STRIDES(blobs_top_boost[0].ptr()), //dim of array that we're slicing
+                                                          (float *)PyArray_GETPTR4(pyramid_float_npy_boost.ptr(), 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
+                                                          0, 0, 0 );
+#endif
 
     Py_INCREF(pyramid_float_npy_boost.ptr()); //PyArray_SetBaseObject steals a reference
     assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure

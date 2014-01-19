@@ -77,7 +77,6 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
 
     }
 
-
     return scaleLocations;
 }
 
