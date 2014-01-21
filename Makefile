@@ -31,8 +31,9 @@ EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
 # STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
-STITCHPYRAMID_SRC := (shell find python/caffe/stitch_pyramid/build ! -name "test_*.cpp" -name "*.cpp")
-STITCHPYRAMID_SRC := (shell find python/caffe/stitch_pyramid/build -name "*.h")
+STITCHPYRAMID_SRC := $(shell find python/caffe/stitch_pyramid ! -name "test_*.cpp" -name "*.cpp")
+STITCHPYRAMID_HDRS := $(shell find python/caffe/stitch_pyramid -name "*.h")
+STITCHPYRAMID_SO := python/caffe/stitch_pyramid/libPyramidStitcher.so
 # PYCAFFE_SRC is the python wrapper for caffe
 PYCAFFE_SRC := python/caffe/pycaffe.cpp
 PYCAFFE_SO := python/caffe/pycaffe.so
@@ -100,16 +101,27 @@ test: $(TEST_BINS)
 
 examples: $(EXAMPLE_BINS)
 
-pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) 
-	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
+#integrated compiation of pycaffe + stitch_pyramid
+pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO) 
+	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid -lPyramidStitcher -I./python/caffe/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+
+# version of building pycaffe after using stitch_pyramid's own makefile
+#pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY)  
+#	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
+#		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 
 #pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) 
 #	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -I./python/caffe/stitch_pyramid \
 #		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 
+#pyramid stitcher
+$(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC) 
+	$(CXX) -shared -o $(STITCHPYRAMID_SO) $(STITCHPYRAMID_SRC) $(CXXFLAGS)
 
-matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC)
+#	$(STATIC_NAME) $(CXXFLAGS)
+
+matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC) 
 	$(MATLAB_DIR)/bin/mex $(MATCAFFE_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
