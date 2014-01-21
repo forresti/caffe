@@ -30,6 +30,9 @@ TEST_HDRS := $(shell find src/caffe -name "test_*.hpp")
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
+# STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
+STITCHPYRAMID_SRC := (shell find python/caffe/stitch_pyramid/build ! -name "test_*.cpp" -name "*.cpp")
+STITCHPYRAMID_SRC := (shell find python/caffe/stitch_pyramid/build -name "*.h")
 # PYCAFFE_SRC is the python wrapper for caffe
 PYCAFFE_SRC := python/caffe/pycaffe.cpp
 PYCAFFE_SO := python/caffe/pycaffe.so
