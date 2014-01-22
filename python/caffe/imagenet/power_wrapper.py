@@ -251,6 +251,9 @@ def compute_feats(images_df, layer='imagenet'):
   output_blobs = [np.empty((num, num_output, 1, 1), dtype=np.float32)]
   print(input_blobs[0].shape, output_blobs[0].shape)
 
+  from IPython import embed
+  embed()
+
   caffenet.Forward(input_blobs, output_blobs)
   feats = [output_blobs[0][i].flatten() for i in range(len(output_blobs[0]))]
 
