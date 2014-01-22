@@ -10,6 +10,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/imagenet_mean.hpp"
 
 using std::string;
 
@@ -69,13 +70,22 @@ void* DataLayerPrefetch(void* layer_pointer) {
       } else {
         // Normal copy
         for (int c = 0; c < channels; ++c) {
+          float channel_mean;
+          //Forrest's 'global channel' version (not doing location-biased channel subtraction)
+          if(c==0)
+            channel_mean = IMAGENET_MEAN_B;
+          else if (c==1)
+            channel_mean = IMAGENET_MEAN_G;
+          else if (c==2)
+            channel_mean = IMAGENET_MEAN_R;
           for (int h = 0; h < cropsize; ++h) {
             for (int w = 0; w < cropsize; ++w) {
               top_data[((itemid * channels + c) * cropsize + h) * cropsize + w]
                   = (static_cast<Dtype>(
                       (uint8_t)data[(c * height + h + h_off) * width
                                     + w + w_off])
-                     - mean[(c * height + h + h_off) * width + w + w_off])
+                       - channel_mean)
+                     //- mean[(c * height + h + h_off) * width + w + w_off])
                   * scale;
             }
           }
