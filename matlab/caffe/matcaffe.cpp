@@ -6,7 +6,7 @@
 
 #include "mex.h"
 #include "caffe/caffe.hpp"
-#include "python/caffe/stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
+#include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 #include "boost/shared_ptr.hpp"
 #include "featpyra_common.hpp"
 #include<stdexcept>
