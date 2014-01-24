@@ -6,7 +6,7 @@
 
 #include "mex.h"
 #include "caffe/caffe.hpp"
-#include "python/caffe/stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
+#include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 #include "boost/shared_ptr.hpp"
 #include "featpyra_common.hpp"
 #include<stdexcept>
@@ -312,7 +312,7 @@ static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const &
     mxArray * dp = descriptor_planes[planeID];
     mwSize dp_num_dims = mxGetNumberOfDimensions( dp );
     assert( dp_num_dims == 3 );
-    mwSize * dp_dims = mxGetDimensions( dp );
+    const mwSize * dp_dims = mxGetDimensions( dp );
     assert( dp_dims[0] == width );
     assert( dp_dims[1] == height );
     assert( dp_dims[2] == depth );
