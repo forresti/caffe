@@ -33,6 +33,22 @@
 using namespace FFLD;
 using namespace std;
 
+//TODO: make this uchar?
+//linear interpolation, "lerp"
+void JPEGPyramid::linear_interp(float val0, float val1, int n_elements, float* inout_lerp){
+
+    float n_elements_inv = 1 / (float)n_elements;
+    inout_lerp[0] = val0;
+    inout_lerp[n_elements-1] = val1;
+
+    for(int i=1; i < (n_elements-1); i++){
+        float frac_offset = (n_elements-i) * n_elements_inv;
+
+        inout_lerp[i] = val0 * frac_offset + 
+                        val1 * (1 - frac_offset);
+    }
+}
+
 JPEGPyramid::JPEGPyramid() : padx_(0), pady_(0), interval_(0)
 {
 }
