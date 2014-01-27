@@ -31,9 +31,9 @@ EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
 # STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
-STITCHPYRAMID_SRC := $(shell find python/caffe/stitch_pyramid ! -name "test_*.cpp" -name "*.cpp")
-STITCHPYRAMID_HDRS := $(shell find python/caffe/stitch_pyramid -name "*.h")
-STITCHPYRAMID_SO := python/caffe/stitch_pyramid/libPyramidStitcher.so
+STITCHPYRAMID_SRC := $(shell find src/stitch_pyramid ! -name "test_*.cpp" -name "*.cpp")
+STITCHPYRAMID_HDRS := $(shell find src/stitch_pyramid -name "*.h")
+STITCHPYRAMID_SO := src/stitch_pyramid/libPyramidStitcher.so
 # PYCAFFE_SRC is the python wrapper for caffe
 PYCAFFE_SRC := python/caffe/pycaffe.cpp
 PYCAFFE_SO := python/caffe/pycaffe.so
@@ -103,7 +103,7 @@ examples: $(EXAMPLE_BINS)
 
 #integrated compiation of pycaffe + stitch_pyramid
 pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO) 
-	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./python/caffe/stitch_pyramid -lPyramidStitcher -I./python/caffe/stitch_pyramid \
+	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) -L./src/stitch_pyramid -lPyramidStitcher -I./src/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 
 # version of building pycaffe after using stitch_pyramid's own makefile
@@ -124,7 +124,7 @@ $(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC)
 matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC) 
 	$(MATLAB_DIR)/bin/mex $(MATCAFFE_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" -I./python/caffe \
-		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./python/caffe/stitch_pyramid -lPyramidStitcher \
+		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./src/stitch_pyramid -lPyramidStitcher \
 		-o $(MATCAFFE_SO)
 
 $(NAME): $(PROTO_OBJS) $(OBJS)
