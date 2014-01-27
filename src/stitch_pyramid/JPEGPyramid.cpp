@@ -19,6 +19,7 @@
 //--------------------------------------------------------------------------------------------------
 
 #include "JPEGPyramid.h"
+#include "imagenet_mean.hpp" //contains hard-coded imagenet RGB mean. from Caffe.
 
 #include <algorithm>
 #include <cassert>
