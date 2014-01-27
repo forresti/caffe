@@ -50,6 +50,39 @@ void JPEGPyramid::linear_interp(float val0, float val1, int n_elements, float* i
     }
 }
 
+// call this on each scaled image
+// fills the image's padding with linear interpolated values from 'edge of img pixel' to 'imagenet mean'
+void JPEGPyramid::AvgLerpPad(JPEGImage & image){
+
+    int width = image.width(); //including padding
+    int height = image.height();
+    int depth = 3;
+
+    float top_lerp[pady_+1]; //interpolated data to fill in above the current image column
+    float bottom_lerp[pady_+1];
+    //TODO: left_lerp, right_lerp
+
+    //top (& bottom?)
+    for(int ch=0; ch<3; ch++){
+        float avgPx = IMAGENET_MEAN_RGB[ch];
+        for(int x=padx_; x < width-padx_; x++){
+  
+            //top
+            float currPx = image.bits()[pady_*width*depth + x*depth + ch];
+            linear_interp(currPx, avgPx, pady_+1, top_lerp); //populate top_lerp
+
+            for(int y=0; y<pady_; y++){
+                image.bits()[y*width*depth + x*depth + ch] = top_lerp[pady_ - y];
+            }
+
+        }
+    }
+
+    //left & right
+
+
+}
+
 JPEGPyramid::JPEGPyramid() : padx_(0), pady_(0), interval_(0)
 {
 }
@@ -93,6 +126,7 @@ pady_(0), interval_(0)
 		JPEGImage scaled = image.resize(image.width() * scale + 0.5, image.height() * scale + 0.5);
         bool use_randPad = false;
         scaled = scaled.pad(padx, pady, use_randPad); //an additional deepcopy. (for efficiency, could have 'resize()' accept padding too
+        AvgLerpPad(scaled); //linear interpolate edge pixels to imagenet mean
 
         scales_[i] = scale;
         levels_[i] = scaled;
