@@ -60,7 +60,9 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
 
     float top_lerp[pady_+1]; //interpolated data to fill in above the current image column
     float bottom_lerp[pady_+1];
-    //TODO: left_lerp, right_lerp
+    float left_lerp[padx_+1];
+    float right_lerp[padx_+1];
+    float currPx = 0;
 
     //top (& bottom?)
     for(int ch=0; ch<3; ch++){
@@ -68,18 +70,39 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
         for(int x=padx_; x < width-padx_; x++){
   
             //top
-            float currPx = image.bits()[pady_*width*depth + x*depth + ch];
+            currPx = image.bits()[pady_*width*depth + x*depth + ch];
             linear_interp(currPx, avgPx, pady_+1, top_lerp); //populate top_lerp
-
             for(int y=0; y<pady_; y++){
                 image.bits()[y*width*depth + x*depth + ch] = top_lerp[pady_ - y];
             }
 
+            //bottom
+            currPx = image.bits()[(height-pady_-1)*width*depth + x*depth + ch]; //TODO: or height-pady-1?
+            linear_interp(currPx, avgPx, pady_+1, bottom_lerp); //populate bottom_lerp
+            for(int y=0; y<pady_; y++){
+                int imgY = y + height - pady_; //TODO: or height-pady-1?
+                image.bits()[imgY*width*depth + x*depth + ch] = bottom_lerp[y];
+            }
+        }
+
+        for(int y=pady_; y < height-pady_; y++){
+            
+            //left
+            currPx = image.bits()[y*width*depth + padx_*depth + ch];
+            linear_interp(currPx, avgPx, padx_+1, left_lerp); //populate top_lerp
+            for(int x=0; x<padx_; x++){
+                image.bits()[y*width*depth + x*depth + ch] = left_lerp[padx_ - x];
+            }
+
+            //right
+            currPx = image.bits()[y*width*depth + (width-padx_-1)*depth + ch];
+            linear_interp(currPx, avgPx, padx_+1, right_lerp); //populate top_lerp
+            for(int x=0; x<padx_; x++){
+                int imgX = x + width - padx_;
+                image.bits()[y*width*depth + imgX*depth + ch] = right_lerp[x];
+            }
         }
     }
-
-    //left & right
-
 
 }
 
