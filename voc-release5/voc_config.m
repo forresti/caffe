@@ -20,6 +20,7 @@ function conf = voc_config(varargin)
 
 % Parent directory that everything (model cache, VOCdevkit) is under
 BASE_DIR    = '/var/tmp/rbg';
+BASE_DIR = './cachedir';
 
 % PASCAL dataset year to use
 PASCAL_YEAR = '2007';
