@@ -5,17 +5,45 @@
    - visualized "warped{}" in "train.m -> poswarp()." images look reasonable. 
 
    TODO:
-   - "convnet_features" matlab API that takes a pile of small images (pos_warped or neg_warped), stitches them, and feeds them into Caffe.
+   - [not doing] "convnet_features" matlab API that takes a pile of small images (pos_warped or neg_warped), stitches them, and feeds them into Caffe.
    - tweak training code to call "caffe('convnet_features', ...)" on the whole batch of warped examples.
-   - ask Ross how he handles padding in R-CNN. (zero-padding, or other values in padding?)
-
+   - [done] ask Ross how he handles padding in R-CNN. (zero-padding, or other values in padding?)
+     -> Ross uses imagenet mean.
 
 2. Pyramids
 
-   TODO:
-   - enable "convnet_featpyramid" to accept DPM model that contains padx, pady. 
+    TODO:
+    - enable "convnet_featpyramid" to accept DPM model that contains padx, pady. 
         complain if sbin != 16; 
         assert that padx==pady;
-   - add option to keep or remove padding when unstitching.
-   - replace featpyramid with convnet_featpyramid
+    - add option to keep or remove padding when unstitching.
+    - replace featpyramid with convnet_featpyramid
+
+
+    - create a (C++?) function that takes:
+        model (w/ sbin, padx, pady, scales)
+        pyra,
+        bbox,
+        HOG tempate shape (so we use appropriate scale)
+     and return the (scale, dims) to pull out of the pyramid.
+         should work on both HOG and ConvNet features. (will experiment on both)
+     
+    - try training/testing on HOG with only pyramids and no individual bbox HOG computation.
+
+
+Questions:
+- in train.m, when we pull out a bbox, how do we make the bbox size match the HOG root filter size?
+              or, do we slide the root filter around inside the bbox?
+
+   A: It's not sliding window here.
+      For positives, the warped bboxes match the template size. 
+      (pixels: 48x104 or 56x96 or 56x88 or 64x80) -> divide by 8 for HOG downsampling... matches typical root filter shapes.
+
+      For negatives, we slice out stuff like (y:y+rsize(1)-1, x:x+rsize(2)-1). I think rsize denotes the root filter shape.
+
+- in train.m, where do we do the "2 stages" of training (pyra vs rip out bboxes)?
+
+- in train.m, where do we run the detector that's being trained? (run w/ parts?)
+
+   A: gdetect_pos(), I suppose.
 

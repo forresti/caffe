@@ -445,7 +445,6 @@ function [num_entries, num_examples] = poswarp(t, model, pos)
 % of the form Q -> F.
 numpos = length(pos);
 warped = warppos(model, pos);
-  keyboard
 
 fi = model.symbols(model.rules{model.start}.rhs).filter;
 fbl = model.filters(fi).blocklabel;
@@ -468,7 +467,7 @@ for i = 1:numpos
   % get example
   im = warped{i};
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
-  feat = features(double(im), model.sbin);
+  feat = features(double(im), model.sbin); %TODO: replace with calling caffe_features() on the full stack of warped images.
   key = [i 0 0 0];
   bls = [obl; fbl] - 1;
   feat = [model.features.bias; feat(:)];
