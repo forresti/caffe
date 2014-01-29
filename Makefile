@@ -86,6 +86,9 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
+#SHARED_LDFLAGS := -shared -Wl,--no-undefined # for gcc, this is probably a more sane default: any undefined syms will give a link error
+SHARED_LDFLAGS := -shared
+
 
 ##############################
 # Define build targets
@@ -122,7 +125,7 @@ stitch: $(STITCHPYRAMID_SO)
 .PHONY : stitch
 
 $(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC) 
-	$(CXX) -shared -o $(STITCHPYRAMID_SO) $(STITCHPYRAMID_SRC) $(CXXFLAGS)
+	$(CXX) $(SHARED_LDFLAGS) -o $(STITCHPYRAMID_SO) $(STITCHPYRAMID_SRC) $(CXXFLAGS) -ljpeg
 
 #	$(STATIC_NAME) $(CXXFLAGS)
 
