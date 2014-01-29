@@ -1,0 +1,19 @@
+
+
+1. Training
+
+   TODO:
+   - "convnet_features" matlab API that takes a pile of small images (pos_warped or neg_warped), stitches them, and feeds them into Caffe.
+   - tweak training code to call "caffe('convnet_features', ...)" on the whole batch of warped examples.
+   - ask Ross how he handles padding in R-CNN. (zero-padding, or other values in padding?)
+
+
+2. Pyramids
+
+   TODO:
+   - enable "convnet_featpyramid" to accept DPM model that contains padx, pady. 
+        complain if sbin != 16; 
+        assert that padx==pady;
+   - add option to keep or remove padding when unstitching.
+   - replace featpyramid with convnet_featpyramid
+

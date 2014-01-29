@@ -445,8 +445,6 @@ function [num_entries, num_examples] = poswarp(t, model, pos)
 % of the form Q -> F.
 numpos = length(pos);
 warped = warppos(model, pos);
-  keyboard
-
 fi = model.symbols(model.rules{model.start}.rhs).filter;
 fbl = model.filters(fi).blocklabel;
 obl = model.rules{model.start}.offset.blocklabel;
@@ -467,7 +465,6 @@ for i = 1:numpos
   end    
   % get example
   im = warped{i};
-      display(['    warped box size:' mat2str(size(im))]) %Forrest test
   feat = features(double(im), model.sbin);
   key = [i 0 0 0];
   bls = [obl; fbl] - 1;
@@ -648,7 +645,6 @@ for i = 1:numneg
   tic_toc_print('%s %s: iter %d: random negatives: %d/%d\n', ...
                 procid(), model.class, t, i, numneg);
   im = imreadx(neg(i));
-      display(['    warped box size:' mat2str(size(im))]) %Forrest test
   feat = features(double(im), model.sbin);  
   if size(feat,2) > rsize(2) && size(feat,1) > rsize(1)
     for j = 1:rndneg
