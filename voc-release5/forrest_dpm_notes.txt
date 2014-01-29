@@ -2,6 +2,8 @@
 
 1. Training
 
+   - visualized "warped{}" in "train.m -> poswarp()." images look reasonable. 
+
    TODO:
    - "convnet_features" matlab API that takes a pile of small images (pos_warped or neg_warped), stitches them, and feeds them into Caffe.
    - tweak training code to call "caffe('convnet_features', ...)" on the whole batch of warped examples.
