@@ -50,10 +50,11 @@ try
 catch
   seed_rand();
   for i = 1:n
-    models{i} = root_model(cls, spos{i}, note);
+    [models{i} spos{i}] = root_model(cls, spos{i}, note);
     % Split the i-th aspect ratio group into two clusters: 
     % left vs. right facing instances
     inds = lrsplit(models{i}, spos{i});
+keyboard
     % Train asymmetric root filter on one of these groups
     models{i} = train(models{i}, spos{i}(inds), neg_large, true, true, 1, 1, ...
                       max_num_examples, fg_overlap, 0, false, ...
