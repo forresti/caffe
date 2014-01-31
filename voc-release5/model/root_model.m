@@ -1,4 +1,4 @@
-function model = root_model(cls, pos, note, sbin, sz)
+function [model pos] = root_model(cls, pos, note, sbin, sz)
 % Initialize a root-only model structure.
 %   model = initmodel(cls, pos, note, symmetry, sbin, sz)
 %
@@ -42,6 +42,8 @@ if nargin < 5
   [peak, I] = max(aspects);
   aspect = exp(xx(I));
 
+display(['    aspect ratio: ' mat2str(aspect)]) %Forrest
+
   % pick 20 percentile area
   areas = sort(h.*w);
   area = areas(floor(length(areas) * 0.2));
@@ -73,3 +75,8 @@ model.start = Q;
 model = model_add_struct_rule(model, Q, symbol, {[0 0 0]}, ...
                               'loc_w', [-1000 0 0], ...
                               'detection_window', sz);
+
+for i=1:length(pos)
+  pos(i).templateSize = sz; %e.g. [4 11] or [6 9] etc
+end
+
