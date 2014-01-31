@@ -51,10 +51,16 @@ catch
   seed_rand();
   for i = 1:n
     [models{i} spos{i}] = root_model(cls, spos{i}, note);
+  end
+
+  % spos{}.feat = precompute features all positives, in the aspect ratio of appropriate all components
+  % passing in an arbitrary model to precompute...() for boiler-plate featpyramid parameters.
+  spos = precompute_gt_bbox_features(pos, spos, models{1}); %just passing in a model to get boiler-
+
+  for i = 1:n
     % Split the i-th aspect ratio group into two clusters: 
     % left vs. right facing instances
     inds = lrsplit(models{i}, spos{i});
-keyboard
     % Train asymmetric root filter on one of these groups
     models{i} = train(models{i}, spos{i}(inds), neg_large, true, true, 1, 1, ...
                       max_num_examples, fg_overlap, 0, false, ...
