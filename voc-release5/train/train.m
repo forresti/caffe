@@ -468,6 +468,16 @@ for i = 1:numpos
   im = warped{i};
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
   feat = features(double(im), model.sbin); %TODO: replace with calling caffe_features() on the full stack of warped images.
+
+%Forrest -- compare to precomputed features...
+%  figure(1)
+%  w = foldHOG(feat); % warped
+%  visualizeHOG(w);
+
+%  figure(2)
+%  w = foldHOG(pos(i).feat); % precomputed
+%  visualizeHOG(w);
+
   key = [i 0 0 0];
   bls = [obl; fbl] - 1;
   feat = [model.features.bias; feat(:)];
