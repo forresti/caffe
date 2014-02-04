@@ -47,7 +47,8 @@ diary(conf.training.log([cls '-' timestamp]));
 % Train a model (and record how long it took)
 th = tic;
 %model = pascal_train(cls, n, note);
-model = pascal_train_no_mirror_sharing(cls, n, note);
+%model = pascal_train_no_mirror_sharing(cls, n, note);
+model = pascal_train_rootOnly(cls, note); % 1 component, no parts
 toc(th);
 
 % Free the feature vector cache memory

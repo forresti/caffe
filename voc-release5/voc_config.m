@@ -19,7 +19,7 @@ function conf = voc_config(varargin)
 % Please read the next few lines
 
 % Parent directory that everything (model cache, VOCdevkit) is under
-BASE_DIR    = '/var/tmp/rbg';
+%BASE_DIR    = '/var/tmp/rbg';
 BASE_DIR = './cachedir';
 
 % PASCAL dataset year to use
@@ -112,10 +112,10 @@ conf = cv(conf, 'single_byte_size', 4);
 conf = cv(conf, 'pascal.year', PASCAL_YEAR);
 
 % Directory with PASCAL VOC development kit and dataset
-conf = cv(conf, 'pascal.dev_kit', [conf.paths.base_dir '/VOC' ...
-                                   conf.pascal.year '/VOCdevkit/']);
+%conf = cv(conf, 'pascal.dev_kit', [conf.paths.base_dir '/VOC' ...
+%                                  conf.pascal.year '/VOCdevkit/']);
 % For INRIA person                                   
-%conf = cv(conf, 'pascal.dev_kit', [conf.paths.base_dir '/INRIA/VOCdevkit/']);
+conf = cv(conf, 'pascal.dev_kit', [conf.paths.base_dir '/INRIA_PASCAL/VOCdevkit/']);
 
 if exist(conf.pascal.dev_kit) == 0
   msg = sprintf(['~~~~~~~~~~~ Hello ~~~~~~~~~~~\n' ...

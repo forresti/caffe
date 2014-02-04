@@ -57,7 +57,7 @@ catch
   end
   % spos{}.feat = precompute features all positives, in the aspect ratio of appropriate all components
   % passing in an arbitrary model to precompute...() for boiler-plate featpyramid parameters.
-  spos = precompute_gt_bbox_features(pos, spos, dummy_models{1}); %just passing in a model to get boiler-plate params for feature pyra
+  %spos = precompute_gt_bbox_features(pos, spos, dummy_models{1}); %just passing in a model to get boiler-plate params for feature pyra
 
   for i = 1:n
     m = root_model(cls, spos{i}, note);

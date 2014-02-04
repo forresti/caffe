@@ -14,6 +14,8 @@ function spos = precompute_gt_bbox_features(pos, spos, model)
     for imgIdx = 1:length(imageNames)
         im = imread(imageNames{imgIdx});
 
+        %TODO: add 'for flip = 0:1 ...' and do with and without flipped image.
+
         pyra = featpyramid(im, model);
         pyra.sbin = model.sbin;
  

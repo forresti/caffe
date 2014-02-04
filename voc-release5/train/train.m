@@ -468,6 +468,7 @@ for i = 1:numpos
   im = warped{i};
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
   feat = features(double(im), model.sbin); %TODO: replace with calling caffe_features() on the full stack of warped images.
+  %feat = pos(i).feat; %pulled from pyramid, instead of warping (see precompute_gt_bbox_features.m)
 
 %Forrest -- compare to precomputed features...
 %  figure(1)
