@@ -467,17 +467,20 @@ for i = 1:numpos
   % get example
   im = warped{i};
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
-  feat = features(double(im), model.sbin); %TODO: replace with calling caffe_features() on the full stack of warped images.
-  %feat = pos(i).feat; %pulled from pyramid, instead of warping (see precompute_gt_bbox_features.m)
+  %feat = features(double(im), model.sbin); %TODO: replace with calling caffe_features() on the full stack of warped images.
+  feat = pos(i).feat; %pulled from pyramid, instead of warping (see precompute_gt_bbox_features.m)
 
 %Forrest -- compare to precomputed features...
-%  figure(1)
-%  w = foldHOG(feat); % warped
-%  visualizeHOG(w);
+  %figure(1)
+  %feat_warped = features(double(im), model.sbin);
+  %w = foldHOG(feat_warped); % warped
+  %visualizeHOG(w);
+  %title('original warped features')
 
-%  figure(2)
-%  w = foldHOG(pos(i).feat); % precomputed
-%  visualizeHOG(w);
+  %figure(2)
+  %w = foldHOG(pos(i).feat); % precomputed
+  %visualizeHOG(w);
+  %title('precomputed from pyramid')
 
   key = [i 0 0 0];
   bls = [obl; fbl] - 1;

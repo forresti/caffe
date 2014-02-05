@@ -47,8 +47,8 @@ catch
 
   % pos{}.feat = precompute features all positives, in the aspect ratio of appropriate all components
   spos = precompute_gt_bbox_features(pos, {pos}, model);
+  %spos = precompute_gt_bbox_features(pos(1:10), {pos(1:10)}, model); %small toy example
   pos = spos{1}; %has extra indirection for the multi-component use case.  
-keyboard
 
   % Get warped positives and random negatives
   model = train(model, pos, neg_large, true, true, 1, 1, ...

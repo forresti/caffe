@@ -59,23 +59,23 @@ catch
       pos(numpos).sizes   = (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1);
 
       % Create flipped example
-%      numpos  = numpos + 1;
-%      dataid  = dataid + 1;
-%      oldx1   = bbox(1);
-%      oldx2   = bbox(3);
-%      bbox(1) = rec.imgsize(1) - oldx2 + 1;
-%      bbox(3) = rec.imgsize(1) - oldx1 + 1;
+      numpos  = numpos + 1;
+      dataid  = dataid + 1;
+      oldx1   = bbox(1);
+      oldx2   = bbox(3);
+      bbox(1) = rec.imgsize(1) - oldx2 + 1;
+      bbox(3) = rec.imgsize(1) - oldx1 + 1;
 
-%      pos(numpos).im      = [VOCopts.datadir rec.imgname];
-%      pos(numpos).x1      = bbox(1);
-%      pos(numpos).y1      = bbox(2);
-%      pos(numpos).x2      = bbox(3);
-%      pos(numpos).y2      = bbox(4);
-%      pos(numpos).boxes   = bbox;
-%      pos(numpos).flip    = true;
-%      pos(numpos).trunc   = rec.objects(j).truncated;
-%      pos(numpos).dataids = dataid;
-%      pos(numpos).sizes   = (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1);
+      pos(numpos).im      = [VOCopts.datadir rec.imgname];
+      pos(numpos).x1      = bbox(1);
+      pos(numpos).y1      = bbox(2);
+      pos(numpos).x2      = bbox(3);
+      pos(numpos).y2      = bbox(4);
+      pos(numpos).boxes   = bbox;
+      pos(numpos).flip    = true;
+      pos(numpos).trunc   = rec.objects(j).truncated;
+      pos(numpos).dataids = dataid;
+      pos(numpos).sizes   = (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1);
     end
 
     % Create one entry per foreground image in the impos array
