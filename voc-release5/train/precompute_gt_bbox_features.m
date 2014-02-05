@@ -6,6 +6,7 @@
 % @param pos -- is sorted in order of image ID; boxes with same image ID are grouped together.
 
 % @return spos, with features embedded as spos{component}(boxIdx).feat
+%function spos = precompute_gt_bbox_features(pos, spos, model)
 function spos = precompute_gt_bbox_features(pos, spos, model)
 
     imageNames = unique({pos.im});
@@ -27,8 +28,9 @@ function spos = precompute_gt_bbox_features(pos, spos, model)
 
                     templateSize = pos_example.templateSize;
                     bbox = pos_example; %includes {x1 y1 x2 y2}, plus other debris.
-                    [featureSlice, scale] = get_featureSlice(pyra, bbox, templateSize);
+                    [featureSlice, scale, roundedBox_in_px] = get_featureSlice(pyra, bbox, templateSize);
                     spos{component}(pos_example_id).feat = featureSlice;
+                    spos{component}(pos_example_id).roundedBox_in_px = roundedBox_in_px;
 
                     % optional printouts
                     sizeStr = sprintf('size( spos{component = %d}(example id = %d) ) = %s', component, pos_example_id, mat2str(size(featureSlice)));
