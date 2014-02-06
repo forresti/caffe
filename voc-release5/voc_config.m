@@ -28,7 +28,8 @@ PASCAL_YEAR = '2007';
 % Models are stored in BASE_DIR/PROJECT/PASCAL_YEAR/
 % e.g., /var/tmp/rbg/voc-release5/2007/
 %PROJECT     = 'voc-release5';
-PROJECT     = 'voc-release5_noWarp_centering_noFlip_noTruncationfeat';
+%PROJECT     = 'voc-release5_noWarp_centering_noFlip_noTruncationfeat';
+PROJECT     = 'voc-release5_noWarp_centering_noFlip_withTruncationfeat_depth256';
 
 % The code will look for your PASCAL VOC devkit in 
 % BASE_DIR/VOC<PASCAL_YEAR>/VOCdevkit
@@ -184,8 +185,10 @@ conf.pascal.VOCopts.testset = conf.eval.test_set;
 % Feature configuration 
 % -------------------------------------------------------------------
 conf = cv(conf, 'features.sbin', 8);
-conf = cv(conf, 'features.dim', 32);
-conf = cv(conf, 'features.truncation_dim', 32);
+%conf = cv(conf, 'features.dim', 32);
+%conf = cv(conf, 'features.truncation_dim', 32);
+conf = cv(conf, 'features.dim', 256); %Forrest
+conf = cv(conf, 'features.truncation_dim', 256);
 conf = cv(conf, 'features.extra_octave', false);
 
 
