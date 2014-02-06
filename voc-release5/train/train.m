@@ -664,7 +664,7 @@ for i = 1:numneg
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
   feat = features(double(im), model.sbin);  
   %feat(:,: ,conf.features.truncation_dim) = 0; %Forrest -- expand to new trucation_dim (e.g. 256), and also set trunc features to always be 0
-    feat(:,:,256); %Forrest experiment -- expand to 256d with 0-padding, and also set trunc features to always be 0
+  feat(:,:,256) = 0; %Forrest experiment -- expand to 256d with 0-padding, and also set trunc features to always be 0
 
   if size(feat,2) > rsize(2) && size(feat,1) > rsize(1)
     for j = 1:rndneg
