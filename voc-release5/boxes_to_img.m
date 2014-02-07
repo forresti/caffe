@@ -24,7 +24,7 @@ for imgId = 1:length(spos{1})
     rounded_box = spos{1}(imgId).roundedBox_in_px;
     rounded_box_vec = [rounded_box.x1, rounded_box.y1, rounded_box.x2, rounded_box.y2];
     showboxes(img, rounded_box_vec);
-    title('box rounded to nearest HOG')
+    title('box rounded to nearest descriptor')
 
     
     pause(1)

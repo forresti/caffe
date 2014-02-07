@@ -530,7 +530,7 @@ for i = 1:batchsize:numpos
     % do whole image operations
     im = color(imreadx(pos(j)));
     [im, boxes] = croppos(im, pos(j).boxes);
-    [pyra, model_dp] = gdetect_pos_prepare(im, model, boxes, fg_overlap);
+    [pyra, model_dp] = gdetect_pos_prepare(im, model, boxes, fg_overlap, pos(j));
     data(k).pyra = pyra;
 
     % process each box in the image
@@ -606,7 +606,8 @@ for i = 1:batchsize:numneg
     fprintf('%s %s: iter %d/%d: hard negatives: %d/%d (%d)\n', ...
             procid(), model.class, t, negiter, i+k-1, numneg, j);
     im = color(imreadx(neg(j)));
-    pyra = featpyramid(im, model);
+    %pyra = featpyramid(im, model);
+    pyra = convnet_featpyramid(neg(j)); %Forrest
     [ds, bs, trees] = gdetect(pyra, model, -1.002, det_limit);
     data{k}.bs = bs;
     data{k}.pyra = pyra;

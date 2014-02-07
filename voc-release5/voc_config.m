@@ -29,7 +29,8 @@ PASCAL_YEAR = '2007';
 % e.g., /var/tmp/rbg/voc-release5/2007/
 %PROJECT     = 'voc-release5';
 %PROJECT     = 'voc-release5_noWarp_centering_noFlip_noTruncationfeat';
-PROJECT     = 'voc-release5_noWarp_centering_noFlip_withTruncationfeat_depth256';
+%PROJECT     = 'voc-release5_noWarp_centering_noFlip_withTruncationfeat_depth256';
+PROJECT     = 'voc-release5_noWarp_centering_noFlip_withTruncationfeat_DenseNet';
 
 % The code will look for your PASCAL VOC devkit in 
 % BASE_DIR/VOC<PASCAL_YEAR>/VOCdevkit

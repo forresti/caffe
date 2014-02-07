@@ -31,7 +31,7 @@ function [ds, bs, trees] = gdetect(pyra, model, thresh, max_num)
 %   vectors during learning. Each entry in trees describes the derivation
 %   tree, under the grammar model, that corresponds to each detection.
 
-if nargin < 4
+if nargin < 5
   max_num = inf;
 end
 

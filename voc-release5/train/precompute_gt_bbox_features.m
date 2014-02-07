@@ -10,16 +10,30 @@
 function spos = precompute_gt_bbox_features(pos, spos, model)
 
     imageNames = unique({pos.im});
-  
+    imageNames = imageNames(100:end);
+
+    % you need to add this to your LD_LIBRARY_PATH (for dependencies of caffe.mex):
+    %  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/caffe/src/stitch_pyramid
+
+  %DenseNet / Caffe init
+    %model_def_file = '../python/caffe/imagenet/imagenet_rcnn_batch_1_input_3000x3000_output_conv5.prototxt'
+    %model_file = '../examples/alexnet_train_iter_470000'; % NOTE: you'll have to get the pre-trained ILSVRC network
+    %caffe('init', model_def_file, model_file); % init caffe network (spews logging info)
+    %caffe('set_mode_gpu');
+    %caffe('set_phase_test'); 
+    DenseNet_setup();
 
     for imgIdx = 1:length(imageNames)
         im = imread(imageNames{imgIdx});
+imageNames{imgIdx}
 
-        %TODO: add 'for flip = 0:1 ...' and do with and without flipped image.
+      %HOG pyra
+        %pyra = featpyramid(im, model);
+        %pyra.sbin = model.sbin;
 
-        pyra = featpyramid(im, model);
-        pyra.sbin = model.sbin;
- 
+      %DenseNet pyra
+        pyra = convnet_pyramid(imageNames{imgIdx});
+
         for component = 1:length(spos)
             for pos_example_id = 1:length(spos{component})
                 pos_example = spos{component}(pos_example_id);
@@ -50,9 +64,6 @@ function spos = precompute_gt_bbox_features(pos, spos, model)
 
     %TODO: list of gt bboxes per image.
     %TODO: index between spos and pos?
-
+    %TODO: add 'for flip = 0:1 ...' and do with and without flipped image.
 end
-
-
-
 

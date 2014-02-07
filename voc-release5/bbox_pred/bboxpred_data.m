@@ -45,7 +45,7 @@ catch
     % get example
     im = imreadx(pos(i));
     [im, bbox] = croppos(im, bbox);
-    [pyra, model_dp] = gdetect_pos_prepare(im, model, bbox, 0.7);
+    [pyra, model_dp] = gdetect_pos_prepare(im, model, bbox, 0.7, pos(i));
     [ds, bs] = gdetect_pos(pyra, model_dp, 1, ...
                             1, 0.7, [], 0.5);
     if ~isempty(ds)
