@@ -79,7 +79,6 @@ public:
     int imwidth_;
     int imheight_;
 
-private:
 	int padx_;
 	int pady_;
 	int interval_;
