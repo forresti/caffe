@@ -10,13 +10,12 @@
 function spos = precompute_gt_bbox_features(pos, spos, model)
 
     imageNames = unique({pos.im});
-    imageNames = imageNames(100:end);
 
     % you need to add this to your LD_LIBRARY_PATH (for dependencies of caffe.mex):
     %  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/caffe/src/stitch_pyramid
 
   %DenseNet / Caffe init
-    %model_def_file = '../python/caffe/imagenet/imagenet_rcnn_batch_1_input_3000x3000_output_conv5.prototxt'
+    %model_def_file = '../python/caffe/imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt'
     %model_file = '../examples/alexnet_train_iter_470000'; % NOTE: you'll have to get the pre-trained ILSVRC network
     %caffe('init', model_def_file, model_file); % init caffe network (spews logging info)
     %caffe('set_mode_gpu');
@@ -32,7 +31,7 @@ imageNames{imgIdx}
         %pyra.sbin = model.sbin;
 
       %DenseNet pyra
-        pyra = convnet_pyramid(imageNames{imgIdx});
+        pyra = convnet_featpyramid(imageNames{imgIdx});
 
         for component = 1:length(spos)
             for pos_example_id = 1:length(spos{component})

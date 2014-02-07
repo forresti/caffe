@@ -40,14 +40,19 @@ num_neg   = length(neg);
 neg_large = neg; % use all of the negative images
 
 save_file = [cachedir cls '_final'];
+spos_file = [cachedir cls '_spos_precomputed.mat'];
 try
   load(save_file);
 catch
   [model pos] = root_model(cls, pos, note); %create model; assign templateSize to all 'pos'
 
-  % pos{}.feat = precompute features all positives, in the aspect ratio of appropriate all components
-  spos = precompute_gt_bbox_features(pos, {pos}, model);
-  %spos = precompute_gt_bbox_features(pos(1:10), {pos(1:10)}, model); %small toy example
+  try
+    load(spos_file); 
+  catch
+    % pos{}.feat = precompute features all positives, in the aspect ratio of appropriate all components
+    spos = precompute_gt_bbox_features(pos, {pos}, model);
+    save(spos_file, 'spos');
+  end
   pos = spos{1}; %has extra indirection for the multi-component use case.  
 
   % Get warped positives and random negatives

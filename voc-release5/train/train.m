@@ -607,7 +607,7 @@ for i = 1:batchsize:numneg
             procid(), model.class, t, negiter, i+k-1, numneg, j);
     im = color(imreadx(neg(j)));
     %pyra = featpyramid(im, model);
-    pyra = convnet_featpyramid(neg(j)); %Forrest
+    pyra = convnet_featpyramid(neg(j).im); %Forrest
     [ds, bs, trees] = gdetect(pyra, model, -1.002, det_limit);
     data{k}.bs = bs;
     data{k}.pyra = pyra;
