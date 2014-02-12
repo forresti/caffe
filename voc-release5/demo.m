@@ -1,19 +1,22 @@
 function demo()
 startup;
+DenseNet_setup();
 
-fprintf('compiling the code...');
-compile;
-fprintf('done.\n\n');
+%fprintf('compiling the code...');
+%compile;
+%fprintf('done.\n\n');
 
-load('VOC2007/car_final');
-model.vis = @() visualizemodel(model, ...
-                  1:2:length(model.rules{model.start}));
-test('000034.jpg', model, -0.3);
+%load('VOC2007/car_final');
+%model.vis = @() visualizemodel(model, ...
+%                  1:2:length(model.rules{model.start}));
+%test('000034.jpg', model, -0.3);
 
-load('INRIA/inriaperson_final');
+%load('INRIA/inriaperson_final');
+load('./cachedir/voc-release5_noWarp_centering_noFlip_withTruncationfeat_DenseNet/2007/inriaperson_final.mat');
 model.vis = @() visualizemodel(model, ...
                   1:2:length(model.rules{model.start}));
 test('000061.jpg', model, -0.3);
+%test('000061_3x.jpg', model, -30);
 
 load('VOC2007/person_grammar_final');
 model.class = 'person grammar';
@@ -24,7 +27,6 @@ load('VOC2007/bicycle_final');
 model.vis = @() visualizemodel(model, ...
                   1:2:length(model.rules{model.start}));
 test('000084.jpg', model, -0.3);
-
 function test(imname, model, thresh)
 cls = model.class;
 fprintf('///// Running demo for %s /////\n\n', cls);
@@ -36,25 +38,27 @@ image(im);
 axis equal; 
 axis on;
 disp('input image');
-disp('press any key to continue'); pause;
+%disp('press any key to continue'); pause;
 disp('continuing...');
 
 % load and display model
 model.vis();
 disp([cls ' model visualization']);
-disp('press any key to continue'); pause;
+%disp('press any key to continue'); pause;
 disp('continuing...');
 
+model.interval=5; % TEST
 % detect objects
-[ds, bs] = imgdetect(im, model, thresh);
+[ds, bs] = imgdetect(im, model, thresh, imname);
 top = nms(ds, 0.5);
 clf;
 if model.type == model_types.Grammar
   bs = [ds(:,1:4) bs];
 end
+keyboard
 showboxes(im, reduceboxes(model, bs(top,:)));
 disp('detections');
-disp('press any key to continue'); pause;
+%disp('press any key to continue'); pause;
 disp('continuing...');
 
 if model.type == model_types.MixStar

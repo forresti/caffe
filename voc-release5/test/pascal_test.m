@@ -24,6 +24,8 @@ cachedir = conf.paths.model_dir;
 cls = model.class;
 
 ids = textread(sprintf(VOCopts.imgsetpath, testset), '%s');
+detected_img_dir = [cachedir cls '_detection_images/'];
+mkdir detected_img_dir; 
 
 % run detector in each image
 try
@@ -43,11 +45,13 @@ catch
       % to locate the image.  The annotation is not generally available for PASCAL
       % test data (e.g., 2009 test), so this method can fail for PASCAL.
       rec = PASreadrecord(sprintf(opts.annopath, ids{i}));
-      im = imread([opts.datadir rec.imgname]);
+      imgName = [opts.datadir rec.imgname];
+      im = imread(imgName);
     else
-      im = imread(sprintf(opts.imgpath, ids{i}));  
+      imgName = sprintf(opts.imgpath, ids{i});
+      im = imread(imgName);  
     end
-    [ds, bs] = imgdetect(im, model, model.thresh);
+    [ds, bs] = imgdetect(im, model, model.thresh, imgName);
     if ~isempty(bs)
       unclipped_ds = ds(:,1:4);
       [ds, bs, rm] = clipboxes(im, ds, bs);
@@ -74,9 +78,14 @@ catch
         % Record unclipped detection window and all filter boxes
         bs_out{i} = cat(2, unclipped_ds, bs);
       end
+
+      %showboxes(im, reduceboxes(model, bs_out{i}));
+      %export_fig([detected_img_dir int2str(i) '.jpg']);
     else
       ds_out{i} = [];
       bs_out{i} = [];
+      %imshow(im);
+      %export_fig([detected_img_dir int2str(i) '_noDetection.jpg']);
     end
   end
   th = toc(th);

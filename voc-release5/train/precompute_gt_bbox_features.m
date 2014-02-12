@@ -10,6 +10,7 @@
 function spos = precompute_gt_bbox_features(pos, spos, model)
 
     imageNames = unique({pos.im});
+    %imageNames = imageNames(200:end); % TEST
 
     % you need to add this to your LD_LIBRARY_PATH (for dependencies of caffe.mex):
     %  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/caffe/src/stitch_pyramid

@@ -545,8 +545,10 @@ for i = 1:batchsize:numpos
       fg_box = b;
       bg_boxes = 1:num_boxes;
       bg_boxes(b) = [];
+      %max_bg_overlap = 0.5; %default
+      max_bg_overlap = 0.3; %Forrest test
       [ds, bs, trees] = gdetect_pos(data(k).pyra, model_dp, 1+num_fp, ...
-                                    fg_box, fg_overlap, bg_boxes, 0.5);
+                                    fg_box, fg_overlap, bg_boxes, max_bg_overlap);
       data(k).boxdata{b}.bs = bs;
       data(k).boxdata{b}.trees = trees;
       if ~isempty(bs)
@@ -663,9 +665,14 @@ for i = 1:numneg
                 procid(), model.class, t, i, numneg);
   im = imreadx(neg(i));
       display(['    warped box size:' mat2str(size(im))]) %Forrest test
-  feat = features(double(im), model.sbin);  
+  %feat = features(double(im), model.sbin);  
   %feat(:,: ,conf.features.truncation_dim) = 0; %Forrest -- expand to new trucation_dim (e.g. 256), and also set trunc features to always be 0
-  feat(:,:,256) = 0; %Forrest experiment -- expand to 256d with 0-padding, and also set trunc features to always be 0
+  %feat(:,:,256) = 0; %Forrest experiment -- expand to 256d with 0-padding, and also set trunc features to always be 0
+
+  pyra_params.interval=2; %only compute a couple of scales for random negatives
+  pyra_params.img_padding=16;
+  pyra = convnet_featpyramid(neg(i).im, pyra_params);
+  feat = pyra.feat{1}; %just use one scale, as in original HOG code
 
   if size(feat,2) > rsize(2) && size(feat,1) > rsize(1)
     for j = 1:rndneg

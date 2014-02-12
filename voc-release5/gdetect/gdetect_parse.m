@@ -26,12 +26,18 @@ S = [];
 for level = 1:pyra.num_levels
   score = model.symbols(model.start).score{level};
   tmpI = find(score > thresh);
-  [tmpY, tmpX] = ind2sub(size(score), tmpI);
-  X = [X; tmpX];
-  Y = [Y; tmpY];
-  I = [I; tmpI];
-  L = [L; level*ones(length(tmpI), 1)];
-  S = [S; score(tmpI)];
+  if length(tmpI > 0) 
+   [tmpY, tmpX] = ind2sub(size(score), tmpI);
+    try
+      X = [X; tmpX];
+      Y = [Y; tmpY];
+      I = [I; tmpI];
+      L = [L; level*ones(length(tmpI), 1)];
+      S = [S; score(tmpI)];
+    catch
+      keyboard
+    end
+  end
 end
 
 [ign, ord] = sort(S, 'descend');

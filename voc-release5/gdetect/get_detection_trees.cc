@@ -248,6 +248,9 @@ static void backtrack(int det_index, int start_x, int start_y, int start_l,
       double x2 = x1 + det_win[1]*scale - 1;
       double y2 = y1 + det_win[0]*scale - 1;
 
+      //mexPrintf("scale: %f = %f / %f  n.l: %d  (%f,%f,%f,%f)\n", scale, 
+      //      mxGetScalar(mxGetField(ctx.model, 0, "sbin")), ctx.scales[n.l], n.l, x1, y1, x2, y2);
+
       int dd0 = dets_dim[0];
       dets[dd0*0] = x1 + 1;
       dets[dd0*1] = y1 + 1;

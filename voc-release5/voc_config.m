@@ -163,7 +163,8 @@ conf = cv(conf, 'training.cache_example_limit', 24000);
 conf = cv(conf, 'training.num_negatives_small', 200);
 conf = cv(conf, 'training.num_negatives_large', 2000);
 conf = cv(conf, 'training.wlssvm_M', 0);
-conf = cv(conf, 'training.fg_overlap', 0.7);
+%conf = cv(conf, 'training.fg_overlap', 0.7); %default
+conf = cv(conf, 'training.fg_overlap', 0.8); %Forrest test
 
 conf = cv(conf, 'training.lbfgs.options.verbose', 2);
 conf = cv(conf, 'training.lbfgs.options.maxIter', 1000);
@@ -176,7 +177,8 @@ conf = cv(conf, 'training.interval_bg', 4);
 % -------------------------------------------------------------------
 % Evaluation configuration 
 % -------------------------------------------------------------------
-conf = cv(conf, 'eval.interval', 10);
+%conf = cv(conf, 'eval.interval', 10);
+conf = cv(conf, 'eval.interval', 5);
 conf = cv(conf, 'eval.test_set', 'test');
 conf = cv(conf, 'eval.max_thresh', -1.1);
 conf.pascal.VOCopts.testset = conf.eval.test_set;
@@ -185,7 +187,8 @@ conf.pascal.VOCopts.testset = conf.eval.test_set;
 % -------------------------------------------------------------------
 % Feature configuration 
 % -------------------------------------------------------------------
-conf = cv(conf, 'features.sbin', 8);
+%conf = cv(conf, 'features.sbin', 8);
+conf = cv(conf, 'features.sbin', 16);
 %conf = cv(conf, 'features.dim', 32);
 %conf = cv(conf, 'features.truncation_dim', 32);
 conf = cv(conf, 'features.dim', 256); %Forrest
