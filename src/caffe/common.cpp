@@ -2,13 +2,28 @@
 
 #include <cstdio>
 #include <ctime>
-
+#include <iostream>
+#include "stdarg.h"
 #include "caffe/common.hpp"
 
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
 
+#ifdef ENABLE_ALLOC_TRACE
+  void alloc_trace( bool const free_or_alloc, std::string const & tag, size_t const & sz ) {
+    std::cout << (free_or_alloc?"alloc":"free") << " " << tag << " " << (sz/1000/1000) << "MB\n";
+  }
+  void alloc_trace_printf( char const * const fmt, ... ) {
+    va_list args;
+    va_start( args, fmt );
+    vprintf( fmt, args );
+    va_end( args );
+  }
+#else
+  void alloc_trace( bool const free_or_alloc, std::string const & tag, size_t const & sz ) {}
+  void alloc_trace_printf( char const * const fmt, ... ) {}
+#endif
 
 long cluster_seedgen(void) {
   long s, seed, pid;

@@ -43,6 +43,8 @@ private:\
 
 namespace caffe {
 
+  void alloc_trace_printf( char const * const fmt, ... );
+  void alloc_trace( bool const free_or_alloc, std::string const & tag, size_t const & sz );
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;

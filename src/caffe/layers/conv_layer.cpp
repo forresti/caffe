@@ -65,6 +65,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Set up the bias filler
   if (biasterm_) {
+    alloc_trace(1,"conv_bias_mult",N_ * sizeof(Dtype) );
     bias_multiplier_.reset(new SyncedMemory(N_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
         reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());

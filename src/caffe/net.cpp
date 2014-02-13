@@ -112,6 +112,7 @@ void Net<Dtype>::Init(const NetParameter& param) {
     }
     // After this layer is connected, set it up.
     // LOG(INFO) << "Setting up " << layer_names_[i];
+    alloc_trace_printf( "Setting up layer %s\n", layer_names_[i].c_str() );
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
     for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
       LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
