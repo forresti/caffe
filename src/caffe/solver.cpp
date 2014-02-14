@@ -40,6 +40,9 @@ Solver<Dtype>::Solver(const SolverParameter& param)
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
+  if (param_.solver_mode() && param_.has_device_id()) {
+    Caffe::SetDevice(param_.device_id());
+  }
   Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
@@ -58,10 +61,6 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     ComputeUpdateValue();
     net_->Update();
 
-    // Check if we need to do snapshot
-    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
-      Snapshot();
-    }
     if (param_.display() && iter_ % param_.display() == 0) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
@@ -70,6 +69,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       Caffe::set_phase(Caffe::TEST);
       Test();
       Caffe::set_phase(Caffe::TRAIN);
+    }
+    // Check if we need to do snapshot
+    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
+      Snapshot();
     }
   }
   // After the optimization is done, always do a snapshot.
@@ -81,7 +84,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::Test() {
-  LOG(INFO) << "Testing net";
+  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
   NetParameter net_param;
   net_->ToProto(&net_param);
   CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);

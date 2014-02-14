@@ -6,6 +6,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
 #include "caffe/caffe.hpp"
 #include "caffe/imagenet_mean.hpp"
@@ -25,6 +26,78 @@ using boost::python::len;
 using boost::python::list;
 using boost::python::dict;
 using boost::python::object;
+using boost::python::handle;
+using boost::python::vector_indexing_suite;
+
+
+// wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
+//  to Python
+class CaffeBlob {
+ public:
+
+  CaffeBlob(const shared_ptr<Blob<float> > &blob)
+      : blob_(blob) {}
+
+  CaffeBlob()
+  {}
+
+  int num() const { return blob_->num(); }
+  int channels() const { return blob_->channels(); }
+  int height() const { return blob_->height(); }
+  int width() const { return blob_->width(); }
+  int count() const { return blob_->count(); }
+
+  bool operator == (const CaffeBlob &other)
+  {
+      return this->blob_ == other.blob_;
+  }
+
+ protected:
+  shared_ptr<Blob<float> > blob_;
+};
+
+
+// we need another wrapper (used as boost::python's HeldType) that receives a
+//  self PyObject * which we can use as ndarray.base, so that data/diff memory
+//  is not freed while still being used in Python
+class CaffeBlobWrap : public CaffeBlob {
+ public:
+  CaffeBlobWrap(PyObject *p, shared_ptr<Blob<float> > &blob)
+      : CaffeBlob(blob), self_(p) {}
+
+  CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
+      : CaffeBlob(blob), self_(p) {}
+
+  object get_data()
+  {
+      npy_intp dims[] = {num(), channels(), height(), width()};
+
+      PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                                blob_->mutable_cpu_data());
+      PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+      Py_INCREF(self_);
+      handle<> h(obj);
+
+      return object(h);
+  }
+
+  object get_diff()
+  {
+      npy_intp dims[] = {num(), channels(), height(), width()};
+
+      PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                                blob_->mutable_cpu_diff());
+      PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+      Py_INCREF(self_);
+      handle<> h(obj);
+
+      return object(h);
+  }
+
+ private:
+  PyObject *self_;
+};
+
 
 
 // A simple wrapper over CaffeNet that runs the forward process.
@@ -142,17 +215,17 @@ struct CaffeNet
   }
 
   //float* -> numpy -> boost python (which can be returned to Python)
-  boost::python::object array_to_boostPython_4d(float* pyramid_float, 
+  boost::python::object array_to_boostPython_4d(float* pyramid_float,
                                                 int batchsize, int depth_, int MaxHeight_, int MaxWidth_)
   {
 
     npy_intp dims[4] = {batchsize, depth_, MaxHeight_, MaxWidth_}; //in floats
     PyArrayObject* pyramid_float_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
 
-    //thanks: stackoverflow.com/questions/19185574 
+    //thanks: stackoverflow.com/questions/19185574
     boost::python::object pyramid_float_npy_boost(boost::python::handle<>((PyObject*)pyramid_float_npy));
     return pyramid_float_npy_boost;
-  } 
+  }
 
   // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
   // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
@@ -201,12 +274,12 @@ struct CaffeNet
   //pull list of scales out of patchwork; pack it into boost::python array
   boost::python::object get_scales_boost(Patchwork patchwork){
     vector<float> scales = patchwork.scales_;
-    int dim = scales.size(); 
+    int dim = scales.size();
     npy_intp dims[1] = {dim};
 
-    PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //malloc new memory 
+    PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //malloc new memory
     for(int i=0; i<scales.size(); i++){
-        *(float*)PyArray_GETPTR1(scales_npy, i) = scales[i]; //putting a memcpy() here would be equally good. 
+        *(float*)PyArray_GETPTR1(scales_npy, i) = scales[i]; //putting a memcpy() here would be equally good.
     }
 
     boost::python::object scales_npy_boost(boost::python::handle<>((PyObject*)scales_npy));
@@ -218,7 +291,7 @@ struct CaffeNet
   // @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
   //          typically, descriptor_planes = blobs_top.
   // @param depth = #channels (typically 256 for conv5)
-  // @return a list of numpy 'views', one list element per scale. 
+  // @return a list of numpy 'views', one list element per scale.
   boost::python::list unstitch_planes(vector<ScaleLocation> scaleLocs, boost::python::list descriptor_planes, int depth){
 
     boost::python::list unstitched_features;
@@ -226,7 +299,7 @@ struct CaffeNet
     int batchsize = 1; //TODO: assert that batchsize really is 1.
 
     for(int i=0; i<nbScales; i++) //go from largest to smallest scale
-    { 
+    {
       int planeID = scaleLocs[i].planeID;
       assert(planeID < len(descriptor_planes));
       PyArrayObject* currPlane_npy = (PyArrayObject*)((boost::python::object)descriptor_planes[planeID]).ptr();
@@ -235,8 +308,8 @@ struct CaffeNet
       //setup slice ("view") of numpy array
       PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
                                                             PyArray_STRIDES(currPlane_npy),
-                                                            (float *)PyArray_GETPTR4(currPlane_npy, 
-                                                                                     0, 0, scaleLocs[i].yMin, scaleLocs[i].xMin), 
+                                                            (float *)PyArray_GETPTR4(currPlane_npy,
+                                                                                     0, 0, scaleLocs[i].yMin, scaleLocs[i].xMin),
                                                             0, 0, 0 );
       Py_INCREF(currPlane_npy); //PyArray_SetBaseObject steals a reference
       PyArray_SetBaseObject(view_npy, (PyObject*)currPlane_npy);
@@ -277,13 +350,13 @@ struct CaffeNet
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim); 
+    Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim);
     int nbPlanes = patchwork.planes_.size();
 
-    boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
+    boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward
     boost::python::list blobs_top; //output buffer(s) for Caffe::Forward
 
-    //prep input data for Caffe feature extraction    
+    //prep input data for Caffe feature extraction
     for(int planeID=0; planeID<nbPlanes; planeID++){
       JPEGImage* currPlane = &(patchwork.planes_[planeID]);
       PyArrayObject* currPlane_npy = JPEGImage_to_numpy_float(*currPlane); //TODO: agree on dereference and/or pass-by-ref JPEGImage currPlane
@@ -308,7 +381,7 @@ struct CaffeNet
     boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
     boost::python::object scales_npy_boost = get_scales_boost(patchwork);
 
-    boost::python::dict d; 
+    boost::python::dict d;
     //d["blobs_bottom"]    = blobs_bottom;    //for debugging -- stitched pyra in RGB
     //d["blobs_top"] = blobs_top; //for debugging -- stitched descriptors
     d["feat"] = unstitched_features;
@@ -340,7 +413,7 @@ struct CaffeNet
     boost::python::list blobs_top_boost; //list to return
     blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
 
-    return blobs_top_boost;  
+    return blobs_top_boost;
   }
 
   boost::python::dict test_return_dict()
@@ -365,8 +438,8 @@ struct CaffeNet
     d["pyramid"] = blobs_top_boost;
     d["note"] = myStr;
 
-    //return blobs_top_boost; 
-    return d; 
+    //return blobs_top_boost;
+    return d;
   }
 
   //return a slice ("view") of a numpy array
@@ -397,17 +470,17 @@ struct CaffeNet
     int sliceWidth = sliceWidth_max - sliceWidth_min;
     npy_intp view_dims[4]    = {batchsize, depth_, sliceHeight, sliceWidth}; //in floats
 
-    //this is a view of a slice of pyramid_float. 
-    //PyArrayObject* view_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, strides, (float*)PyArray_DATA(pyramid_float_npy_boost.ptr()) + sliceWidth_min, 0, 0, 0 ); 
+    //this is a view of a slice of pyramid_float.
+    //PyArrayObject* view_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, strides, (float*)PyArray_DATA(pyramid_float_npy_boost.ptr()) + sliceWidth_min, 0, 0, 0 );
 
 #if 0 //view of boost::object
     PyArrayObject * const pyramid_float_npy = (PyArrayObject *)(pyramid_float_npy_boost.ptr());
-    PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT, 
+    PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
                                                           PyArray_STRIDES(pyramid_float_npy), //dim of array that we're slicing
-                                                          (float *)PyArray_GETPTR4(pyramid_float_npy, 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
+                                                          (float *)PyArray_GETPTR4(pyramid_float_npy, 0, 0, sliceHeight_min, sliceWidth_min), //new dim
                                                           0, 0, 0 );
 #endif
-#if 1 //view of boost::list[0] 
+#if 1 //view of boost::list[0]
     PyArrayObject * const blobs_top_boost_0_npy = (PyArrayObject *)(((boost::python::object)blobs_top_boost[0]).ptr());
     PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
                                                           PyArray_STRIDES(blobs_top_boost_0_npy), //dim of array that we're slicing
@@ -419,10 +492,10 @@ struct CaffeNet
     assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure
 
     boost::python::list blobs_top_boost_view;
-    boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy)); 
+    boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy));
     blobs_top_boost_view.append(view_npy_boost);
 
-    return blobs_top_boost_view; //compile error: return-statement with no value  
+    return blobs_top_boost_view; //compile error: return-statement with no value
     //return blobs_top_boost;
   }
 
@@ -442,11 +515,20 @@ struct CaffeNet
   void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
+  vector<CaffeBlob> blobs() {
+      return vector<CaffeBlob>(net_->blobs().begin(), net_->blobs().end());
+  }
+
+  vector<CaffeBlob> params() {
+      return vector<CaffeBlob>(net_->params().begin(), net_->params().end());
+  }
+
   // The pointer to the internal caffe::Net instant.
 	shared_ptr<Net<float> > net_;
 };
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(CaffeNet_extract_featpyramid_overloads, CaffeNet::extract_featpyramid, 1, 2);
+
 
 // The boost python module definition.
 BOOST_PYTHON_MODULE(pycaffe)
@@ -466,8 +548,27 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
       .def("test_NumpyView",          &CaffeNet::test_NumpyView) //Forrest's test (return view of a numpy array)
       .def("testString",      &CaffeNet::testString)
-      .def("test_return_dict", &CaffeNet::test_return_dict) 
+      .def("test_return_dict", &CaffeNet::test_return_dict)
       .def("testInt",         &CaffeNet::testInt)
-    .def("extract_featpyramid",         &CaffeNet::extract_featpyramid, CaffeNet_extract_featpyramid_overloads()) //NEW
+      .def("extract_featpyramid",         &CaffeNet::extract_featpyramid, CaffeNet_extract_featpyramid_overloads()) //NEW
+      .def("blobs",           &CaffeNet::blobs)
+      .def("params",          &CaffeNet::params)
   ;
+
+  boost::python::class_<CaffeBlob, CaffeBlobWrap>(
+      "CaffeBlob", boost::python::no_init)
+      .add_property("num",      &CaffeBlob::num)
+      .add_property("channels", &CaffeBlob::channels)
+      .add_property("height",   &CaffeBlob::height)
+      .add_property("width",    &CaffeBlob::width)
+      .add_property("count",    &CaffeBlob::count)
+      .add_property("data",     &CaffeBlobWrap::get_data)
+      .add_property("diff",     &CaffeBlobWrap::get_diff)
+  ;
+
+  boost::python::class_<vector<CaffeBlob> >("BlobVec")
+      .def(vector_indexing_suite<vector<CaffeBlob>, true>());
+
+  import_array();
+
 }
