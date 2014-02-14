@@ -58,8 +58,15 @@ catch
   % Get warped positives and random negatives
   model = train(model, pos, neg_large, true, true, 1, 1, ...
                 max_num_examples, fg_overlap, 0, false, 'init');
-  % Finish training by data mining on all of the negative images
+
+  % Latent training with num_fp=0 (not penalizing near-detections)
+%  model = train(model, pos, neg_large, false, false, 1, 10, ...
+%                max_num_examples, fg_overlap, 0, true, 'hard_neg_num_fp_0');
+
+  %original:  ... penalize near-detections... (num_fp > 0)
+  % Finish training by data mining on all of the negative images 
   model = train(model, pos, neg_large, false, false, 1, 10, ...
                 max_num_examples, fg_overlap, num_fp, true, 'hard_neg');
+
   save(save_file);
 end
