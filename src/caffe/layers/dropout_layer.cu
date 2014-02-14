@@ -17,6 +17,7 @@ void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   NeuronLayer<Dtype>::SetUp(bottom, top);
   // Set up the cache for random number generation
+  alloc_trace(1,"dropout_rand_vec",bottom[0]->count() * sizeof(int));	
   rand_vec_.reset(new SyncedMemory(bottom[0]->count() * sizeof(int)));
   threshold_ = this->layer_param_.dropout_ratio();
   DCHECK(threshold_ > 0.);

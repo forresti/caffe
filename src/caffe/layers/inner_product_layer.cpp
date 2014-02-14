@@ -52,6 +52,7 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }  // parameter initialization
   // Setting up the bias multiplier
   if (biasterm_) {
+    alloc_trace(1,"inner_prod_bias",bottom[0]->count() * sizeof(int));	
     bias_multiplier_.reset(new SyncedMemory(M_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
         reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());

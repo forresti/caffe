@@ -7,8 +7,11 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include <cstdio>
 
 namespace caffe {
+
+template< typename T > inline std::string str(T const & i) { std::stringstream s; s << i; return s.str(); } // convert T i to strin
 
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
@@ -21,11 +24,15 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   channels_ = channels;
   height_ = height;
   width_ = width;
+  
   count_ = num_ * channels_ * height_ * width_;
+  alloc_trace_printf( "num_=%s channels_=%s height_=%s width_=%s  ", str(num_).c_str(), str(channels_).c_str(), str(height_).c_str(), str(width_).c_str() );
   if (count_) {
+    alloc_trace(1,"blob_init",count_ * sizeof(Dtype) );
     data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
   } else {
+    alloc_trace(1,"blob_init_null",0 );
     data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
     diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
   }

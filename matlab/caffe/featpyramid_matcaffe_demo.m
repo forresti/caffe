@@ -26,7 +26,7 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     end
 
     %model_def_file = '../../examples/imagenet_deploy.prototxt';
-    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
+    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
     % NOTE: you'll have to get the pre-trained ILSVRC network
     model_file = '../../examples/alexnet_train_iter_470000';
 
@@ -50,8 +50,10 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     caffe('set_phase_test');
 
     % optionally, pass parmeters as second argument to convnet_featpyramid (set here to the defaults)
-    pyra_params.interval = 5;
+    pyra_params.interval = 10;
     pyra_params.img_padding = 16;
+    pyra_params.feat_minWidth = 1;
+    pyra_params.feat_minHeight = 1;
 
     pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
     % pyra = caffe('convnet_featpyramid', imfn ); % ... or with no parameters
