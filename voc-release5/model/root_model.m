@@ -55,6 +55,7 @@ display(['    aspect ratio: ' mat2str(aspect)]) %Forrest
 
   % size of root filter
   sz = [round(h/model.sbin) round(w/model.sbin)];
+  sz = sz*2; %Forrest's tweak
 end
 
 % get an empty model

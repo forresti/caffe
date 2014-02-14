@@ -545,8 +545,8 @@ for i = 1:batchsize:numpos
       fg_box = b;
       bg_boxes = 1:num_boxes;
       bg_boxes(b) = [];
-      %max_bg_overlap = 0.5; %default
-      max_bg_overlap = 0.3; %Forrest test
+      max_bg_overlap = 0.5; %default
+      %max_bg_overlap = 0.3; %Forrest test
       [ds, bs, trees] = gdetect_pos(data(k).pyra, model_dp, 1+num_fp, ...
                                     fg_box, fg_overlap, bg_boxes, max_bg_overlap);
       data(k).boxdata{b}.bs = bs;

@@ -25,7 +25,7 @@ cls = model.class;
 
 ids = textread(sprintf(VOCopts.imgsetpath, testset), '%s');
 detected_img_dir = [cachedir cls '_detection_images/'];
-mkdir detected_img_dir; 
+mkdir(detected_img_dir); 
 
 % run detector in each image
 try
@@ -37,7 +37,8 @@ catch
   ds_out = cell(1, num_ids);
   bs_out = cell(1, num_ids);
   th = tic();
-  parfor i = 1:num_ids;
+  %parfor i = 1:num_ids;
+  for i = 1:num_ids
     fprintf('%s: testing: %s %s, %d/%d\n', cls, testset, year, ...
             i, num_ids);
     if strcmp('inriaperson', cls)
@@ -79,13 +80,13 @@ catch
         bs_out{i} = cat(2, unclipped_ds, bs);
       end
 
-      %showboxes(im, reduceboxes(model, bs_out{i}));
-      %export_fig([detected_img_dir int2str(i) '.jpg']);
+%      showboxes(im, reduceboxes(model, bs_out{i}));
+%      export_fig([detected_img_dir int2str(i) '.jpg']);
     else
       ds_out{i} = [];
       bs_out{i} = [];
-      %imshow(im);
-      %export_fig([detected_img_dir int2str(i) '_noDetection.jpg']);
+%      imshow(im);
+%      export_fig([detected_img_dir int2str(i) '_noDetection.jpg']);
     end
   end
   th = toc(th);
