@@ -119,9 +119,19 @@ void Net<Dtype>::Init(const NetParameter& param) {
           << top_vecs_[i][topid]->height() << " "
           << top_vecs_[i][topid]->width();
     }
-    // Check if this layer needs backward operation itself
-    for (int j = 0; j < layers_[i]->layer_param().blobs_lr_size(); ++j) {
-      need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
+    int blobs_lr_size = layers_[i]->layer_param().blobs_lr_size();
+    CHECK(blobs_lr_size == layers_[i]->blobs().size() || blobs_lr_size == 0)
+        << "Incorrect blobs lr size: should be either 0 or the same as "
+           "the number of the layer's parameter blobs.";
+    if (blobs_lr_size) {
+      // Check if this layer needs backward operation itself
+      for (int j = 0; j < blobs_lr_size; ++j) {
+        need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
+      }
+    } else if (layers_[i]->blobs().size()) {
+      // catch: if a layer param does not specify blobs_lr, we should assume the
+      // learning rate to be 1. Thus we will need to perform backward.
+      need_backward = true;
     }
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
