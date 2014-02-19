@@ -21,6 +21,10 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
                      int imgID, int numGroups, int groupID);
 
 
+template <typename Dtype>
+void hello_cuda_template();
+//void hello_cuda_template(const vector<Blob<Dtype>*>& bottom);
+
 void hello_cuda();
 
 } // close Caffe class

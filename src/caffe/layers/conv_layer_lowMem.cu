@@ -95,7 +95,14 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
                                                 imgID, numGroups, groupID);    
 }
 
-void hello_cuda(){
+void hello_cuda()
+{
+}
+
+template <typename Dtype>
+void hello_cuda_template()
+//void hello_cuda_template(const vector<Blob<Dtype>*>& bottom)
+{
 
 }
 
