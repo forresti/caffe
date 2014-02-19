@@ -290,6 +290,8 @@ class ConvolutionLayer : public Layer<Dtype> {
   int CHANNELS_;
   int HEIGHT_;
   int WIDTH_;
+  int HEIGHT_OUT_;
+  int WIDTH_OUT_;
   int NUM_OUTPUT_;
   int GROUP_;
   Blob<Dtype> col_buffer_;

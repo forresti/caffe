@@ -8,6 +8,8 @@
 #include "caffe/filler.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "conv_layer.cuh" //yuck ... should have a header file for this
+
 namespace caffe {
 
 template <typename Dtype>
@@ -27,9 +29,9 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(CHANNELS_ % GROUP_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
-  int height_out = (HEIGHT_ - KSIZE_) / STRIDE_ + 1;
-  int width_out = (WIDTH_ - KSIZE_) / STRIDE_ + 1;
-  col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out);
+  HEIGHT_OUT_ = (HEIGHT_ - KSIZE_) / STRIDE_ + 1;
+  WIDTH_OUT_ = (WIDTH_ - KSIZE_) / STRIDE_ + 1;
+  col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, HEIGHT_OUT_, WIDTH_OUT_);
   // Set the parameters
   CHECK_EQ(NUM_OUTPUT_ % GROUP_, 0)
       << "Number of output should be multiples of group.";
@@ -37,8 +39,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Figure out the dimensions for individual gemms.
   M_ = NUM_OUTPUT_ / GROUP_;
   K_ = CHANNELS_ * KSIZE_ * KSIZE_ / GROUP_;
-  N_ = height_out * width_out;
-  (*top)[0]->Reshape(bottom[0]->num(), NUM_OUTPUT_, height_out, width_out);
+  N_ = HEIGHT_OUT_ * WIDTH_OUT_;
+  (*top)[0]->Reshape(bottom[0]->num(), NUM_OUTPUT_, HEIGHT_OUT_, WIDTH_OUT_);
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
