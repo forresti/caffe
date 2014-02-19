@@ -8,7 +8,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#include "conv_layer_lowMem.cuh" //yuck ... should have a header file for this
+#include "conv_layer_lowMem.cuh" //yuck ... should have a header for this, but the make system doesn't notice *.cuh files
 
 namespace caffe {
 
@@ -132,7 +132,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                         n, GROUP_, g);
 #endif
         hello_cuda();
-        //hello_cuda_template<Dtype>();
+        hello_cuda_template<Dtype>();
         //hello_cuda_template<Dtype>(bottom);
       }
 
