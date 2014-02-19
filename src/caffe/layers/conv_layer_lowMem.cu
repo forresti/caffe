@@ -21,7 +21,7 @@ inputs:
   height_out
   width_out
   stride //same for x and y
-  kernelSize //same for x and y... ignores depth
+  kernelSize //convolution filter dim. same for x and y... ignores depth
   imgID "n" //within batch
   groupID "g" //typically 0 or 1
 
@@ -32,12 +32,10 @@ inputs:
 
 template <typename Dtype>
 __global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
-                                       int stride, int channels, int height_in, int width_in,
+                                       int stride, int kernelSize, int num_channels, int height_in, int width_in,
                                        int num_output, int height_out, int width_out,
-                                       int imgID, int groupID)
+                                       int imgID, int numGroups, int groupID)
 {
-//TODO
-
     //top-left anchor in input image:
     int x = (blockIdx.x*blockDim.x + threadIdx.x);
     int y = (blockIdx.y*blockDim.y + threadIdx.y);
@@ -45,7 +43,26 @@ __global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
     //filter ID:
     int f = (blockIdx.z*blockDim.z + threadIdx.z);
 
+    Dtype output_px = 0.0f; //calculate in this register, then write to output buffer
 
+    for(int ch=0; ch < num_channels; ch++)
+    {
+        for(int localY=0; localY < kernelSize; localY++)
+        {
+            for(int localX=0; localX < kernelSize; localX++)
+            {
+
+
+            }
+        }
+    }
+
+    int outputIdx = imgID   * (numGroups * num_output * height_out * width_out) +
+                    groupID * (num_output * height_out * width_out) +
+                    f       * (height_out * width_out) +
+                    y       * (width_out) + x; 
+
+    top_data[outputIdx] = output_px;
 }
 
 
@@ -53,12 +70,10 @@ __global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
 // for now, this processes ONE IMAGE (one item in a batch)
 template <typename Dtype>
 void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top,
-                     int stride, int channels, int height_in, int width_in,
+                     int stride, int kernelSize, int num_channels, int height_in, int width_in,
                      int num_output, int height_out, int width_out,
-                     int imgID, int groupID)
+                     int imgID, int numGroups, int groupID)
 {
-//TODO
-
     dim3 grid;
     dim3 block;
     block.x = 16;
@@ -75,11 +90,12 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     Dtype* top_data = (*top)[0]->mutable_gpu_data();
 
     Conv_gpu_lowMem_kernel <<< grid, block >>> (bottom_data, top_data,
-                                                stride, channels, height_in, width_in,
+                                                stride, kernelSize, num_channels, height_in, width_in,
                                                 num_output, height_out, width_out,
-                                                imgID, groupID);    
+                                                imgID, numGroups, groupID);    
+}
 
-    //convolutionKernel_globalmem_only_kernel3x3 <<< grid, block >>>(dImg, dResult, width, height)
+void hello_cuda(){
 
 }
 
