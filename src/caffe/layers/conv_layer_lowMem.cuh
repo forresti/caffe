@@ -17,6 +17,9 @@ namespace caffe {
 
 /*
 inputs: 
+  bottom_data
+  top_data
+  filters = "weight"
   num_output //#filters
   num_channels = CHANNELS_
   height_in = HEIGHT_
@@ -34,7 +37,7 @@ inputs:
 
 
 template <typename Dtype>
-__global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
+__global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data, const Dtype* filters,
                                        int stride, int kernelSize, int num_channels, int height_in, int width_in,
                                        int num_output, int height_out, int width_out,
                                        int imgID, int numGroups, int groupID)
@@ -48,14 +51,34 @@ __global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
 
     Dtype output_px = 0.0f; //calculate in this register, then write to output buffer
 
+    int filterIdx_base = f * (num_channels * kernelSize * kernelSize);
+
+    int inputIdx_base = imgID   * (numGroups * num_channels * height_in * width_in) +
+                        groupID * (num_channels * height_in * width_in);
+
     for(int ch=0; ch < num_channels; ch++)
     {
-        for(int localY=0; localY < kernelSize; localY++)
+        for(int yLocal=0; yLocal < kernelSize; yLocal++)
         {
-            for(int localX=0; localX < kernelSize; localX++)
+            for(int xLocal=0; xLocal < kernelSize; xLocal++)
             {
 
+#if 1
+                int inputIdx = inputIdx_base +
+                               ch          * (height_in * width_in) + 
+                               (y+yLocal)  * (width_in) + 
+                               (x+xLocal);
 
+                //index of current element in filter f
+                int filterIdx = filterIdx_base +
+                                ch     * (kernelSize * kernelSize) +
+                                yLocal * (kernelSize) + 
+                                xLocal;
+#endif
+                //int inputIdx = 0;
+                //int filterIdx = 0;
+
+                output_px += bottom_data[inputIdx] * filters[filterIdx]; 
             }
         }
     }
@@ -72,7 +95,7 @@ __global__ void Conv_gpu_lowMem_kernel(Dtype* bottom_data, Dtype* top_data,
 // wrapper ... launches the conv kernel.
 // for now, this processes ONE IMAGE (one item in a batch)
 template <typename Dtype>
-void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top,
+void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top, const Dtype* filters,
                      int stride, int kernelSize, int num_channels, int height_in, int width_in,
                      int num_output, int height_out, int width_out,
                      int imgID, int numGroups, int groupID)
@@ -89,10 +112,10 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     grid.y = (height_out % block.y == 0) ? ny : ny+1;
     grid.z = (num_output % block.z == 0) ? nz : nz+1;
 
-    Dtype* bottom_data = bottom[0]->gpu_data();
+    const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* top_data = (*top)[0]->mutable_gpu_data();
 
-    Conv_gpu_lowMem_kernel <<< grid, block >>> (bottom_data, top_data,
+    Conv_gpu_lowMem_kernel <<< grid, block >>> (bottom_data, top_data, filters,
                                                 stride, kernelSize, num_channels, height_in, width_in,
                                                 num_output, height_out, width_out,
                                                 imgID, numGroups, groupID);    

@@ -111,7 +111,7 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 
-  bool use_low_mem_conv = true;
+  bool use_low_mem_conv = true; //TODO: expose this to user
 
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -125,8 +125,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if(use_low_mem_conv){
 
       for(int g = 0; g < GROUP_; ++g) {
-#if 0
-        Conv_gpu_lowMem(bottom, top, 
+#if 1
+        Conv_gpu_lowMem<Dtype>(bottom, top, weight, 
                         STRIDE_, KSIZE_, CHANNELS_, HEIGHT_, WIDTH_,
                         NUM_OUTPUT_, HEIGHT_OUT_, WIDTH_OUT_,
                         n, GROUP_, g);
