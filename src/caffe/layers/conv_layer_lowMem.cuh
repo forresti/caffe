@@ -103,8 +103,8 @@ void hello_cuda()
 }
 
 template <typename Dtype>
-void hello_cuda_template()
-//void hello_cuda_template(const vector<Blob<Dtype>*>& bottom)
+//void hello_cuda_template()
+void hello_cuda_template(const vector<Blob<Dtype>*>& bottom)
 {
 
 }

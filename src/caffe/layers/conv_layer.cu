@@ -132,8 +132,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                         n, GROUP_, g);
 #endif
         hello_cuda();
-        hello_cuda_template<Dtype>();
-        //hello_cuda_template<Dtype>(bottom);
+        //hello_cuda_template<Dtype>();
+        hello_cuda_template<Dtype>(bottom);
       }
 
     }
