@@ -51,44 +51,51 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
 
     Dtype output_px = 0.0f; //calculate in this register, then write to output buffer
 
+    //TODO: consider groupID in calculating filter index?
     int filterIdx_base = f * (num_channels * kernelSize * kernelSize);
 
     int inputIdx_base = imgID   * (numGroups * num_channels * height_in * width_in) +
                         groupID * (num_channels * height_in * width_in);
 
-    for(int ch=0; ch < num_channels; ch++)
+    //if( (x < width_out) && (y < height_out) && (f < num_output) )
+    if( (x < 5) && (y < 5) && (f < 5) ) //test
     {
-        for(int yLocal=0; yLocal < kernelSize; yLocal++)
+
+        for(int ch=0; ch < num_channels; ch++)
         {
-            for(int xLocal=0; xLocal < kernelSize; xLocal++)
+            for(int yLocal=0; yLocal < kernelSize; yLocal++)
             {
+                for(int xLocal=0; xLocal < kernelSize; xLocal++)
+                {
 
-#if 1
-                int inputIdx = inputIdx_base +
-                               ch          * (height_in * width_in) + 
-                               (y+yLocal)  * (width_in) + 
-                               (x+xLocal);
+    #if 1
+                    //TODO: consider stride in inputIdx
+                    int inputIdx = inputIdx_base +
+                                   ch          * (height_in * width_in) + 
+                                   (y+yLocal)  * (width_in) + 
+                                   (x+xLocal);
 
-                //index of current element in filter f
-                int filterIdx = filterIdx_base +
-                                ch     * (kernelSize * kernelSize) +
-                                yLocal * (kernelSize) + 
-                                xLocal;
-#endif
-                //int inputIdx = 0;
-                //int filterIdx = 0;
+                    //index of current element in filter f
+                    int filterIdx = filterIdx_base +
+                                    ch     * (kernelSize * kernelSize) +
+                                    yLocal * (kernelSize) + 
+                                    xLocal;
+    #endif
+                    //int inputIdx = 0;
+                    //int filterIdx = 0;
 
-                output_px += bottom_data[inputIdx] * filters[filterIdx]; 
+                    output_px += bottom_data[inputIdx] * filters[filterIdx]; 
+                }
             }
         }
+
+        int outputIdx = imgID   * (numGroups * num_output * height_out * width_out) +
+                        groupID * (num_output * height_out * width_out) +
+                        f       * (height_out * width_out) +
+                        y       * (width_out) + x; 
+
+        top_data[outputIdx] = output_px;
     }
-
-    int outputIdx = imgID   * (numGroups * num_output * height_out * width_out) +
-                    groupID * (num_output * height_out * width_out) +
-                    f       * (height_out * width_out) +
-                    y       * (width_out) + x; 
-
-    top_data[outputIdx] = output_px;
 }
 
 
