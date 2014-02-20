@@ -1,0 +1,101 @@
+
+time, averaged over 10 runs per layer in GPU mode (K20).
+
+simple low-mem conv
+  avg time per layer: 
+    data forward: 31.313110 ms
+    conv1 forward: 353.606299 ms
+    relu1 forward: 0.004810 ms
+    pool1 forward: 0.003320 ms
+    norm1 forward: 0.007202 ms
+    pad2 forward: 0.007812 ms
+    conv2 forward: 405.088892 ms
+    relu2 forward: 0.004321 ms
+    pool2 forward: 0.003418 ms
+    norm2 forward: 0.007007 ms
+    pad3 forward: 0.007690 ms
+    conv3 forward: 260.165112 ms
+    relu3 forward: 0.003003 ms
+    pad4 forward: 0.006323 ms
+    conv4 forward: 196.114209 ms
+    relu4 forward: 0.002979 ms
+    pad5 forward: 0.006372 ms
+    conv5 forward: 161.230420 ms
+    relu5 forward: 0.003320 ms
+    pool5 forward: 0.003296 ms
+    fc6 forward: 0.008008 ms
+    relu6 forward: 0.003906 ms
+    drop6 forward: 0.008276 ms
+    fc7 forward: 0.007788 ms
+    relu7 forward: 0.002808 ms
+    drop7 forward: 0.007300 ms
+    fc8 forward: 0.007690 ms
+    prob forward: 0.021289 ms
+    accuracy forward: 8.061206 ms
+
+
+stock BLAS conv (without cudaDeviceSynchronize)
+  avg time per layer: 
+    data forward: 35.655176 ms
+    conv1 forward: 5.764526 ms
+    relu1 forward: 0.109180 ms
+    pool1 forward: 0.118213 ms
+    norm1 forward: 0.240405 ms
+    pad2 forward: 0.249390 ms
+    conv2 forward: 27.039087 ms
+    relu2 forward: 0.106616 ms
+    pool2 forward: 0.136694 ms
+    norm2 forward: 0.246997 ms
+    pad3 forward: 0.246899 ms
+    conv3 forward: 20.433521 ms
+    relu3 forward: 0.118213 ms
+    pad4 forward: 0.275513 ms
+    conv4 forward: 24.337085 ms
+    relu4 forward: 0.087891 ms
+    pad5 forward: 0.213110 ms
+    conv5 forward: 21.808496 ms
+    relu5 forward: 0.087500 ms
+    pool5 forward: 0.122778 ms
+    fc6 forward: 0.212280 ms
+    relu6 forward: 0.088306 ms
+    drop6 forward: 0.211914 ms
+    fc7 forward: 0.211987 ms
+    relu7 forward: 0.123120 ms
+    drop7 forward: 0.212891 ms
+    fc8 forward: 0.213110 ms
+    prob forward: 0.638184 ms
+    accuracy forward: 16.779980 ms
+
+
+stock BLAS conv (with cudaDeviceSynchronize after each BLAS call)
+  avg time per layer: 
+    data forward: 29.740308 ms
+    conv1 forward: 18.515796 ms
+    relu1 forward: 0.003003 ms
+    pool1 forward: 0.003198 ms
+    norm1 forward: 0.005713 ms
+    pad2 forward: 0.006494 ms
+    conv2 forward: 28.858496 ms
+    relu2 forward: 0.003198 ms
+    pool2 forward: 0.003271 ms
+    norm2 forward: 0.006982 ms
+    pad3 forward: 0.007812 ms
+    conv3 forward: 22.395020 ms
+    relu3 forward: 0.004224 ms
+    pad4 forward: 0.007690 ms
+    conv4 forward: 22.974878 ms
+    relu4 forward: 0.004102 ms
+    pad5 forward: 0.007715 ms
+    conv5 forward: 22.870898 ms
+    relu5 forward: 0.004199 ms
+    pool5 forward: 0.003198 ms
+    fc6 forward: 0.007886 ms
+    relu6 forward: 0.003979 ms
+    drop6 forward: 0.008081 ms
+    fc7 forward: 0.007812 ms
+    relu7 forward: 0.003906 ms
+    drop7 forward: 0.007104 ms
+    fc8 forward: 0.007593 ms
+    prob forward: 0.022290 ms
+    accuracy forward: 8.047510 ms
+

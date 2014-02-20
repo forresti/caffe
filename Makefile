@@ -19,7 +19,7 @@ STATIC_NAME := lib$(PROJECT).a
 CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" -name "*.cpp")
 # HXX_SRCS are the header files
 HXX_SRCS := $(shell find include/$(PROJECT) ! -name "*.hpp")
-HXX_SRCS := $(shell find src/$(PROJECT) ! -name "*.cuh")
+HXX_SRCS := ${HXX_SRCS} $(shell find src/$(PROJECT) ! -name "*.cuh")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/$(PROJECT) -name "*.cu")
 # TEST_SRCS are the test source files

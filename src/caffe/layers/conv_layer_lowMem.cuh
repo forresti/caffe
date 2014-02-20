@@ -36,32 +36,38 @@ inputs:
 */
 
 
+
+// each thread owns an output pixel and a filter.
 template <typename Dtype>
 __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data, const Dtype* filters,
                                        int stride, int kernelSize, int num_channels, int height_in, int width_in,
                                        int num_output, int height_out, int width_out,
                                        int imgID, int numGroups, int groupID)
 {
+
+    int top_data_length = 50 * num_output * height_out * width_out; 
+
     //top-left anchor in input image:
     int x = (blockIdx.x*blockDim.x + threadIdx.x);
     int y = (blockIdx.y*blockDim.y + threadIdx.y);
 
-    //filter ID:
-    int f = (blockIdx.z*blockDim.z + threadIdx.z);
+    int num_filters_per_group = num_output / numGroups; 
+    int f = (blockIdx.z*blockDim.z + threadIdx.z) + (num_filters_per_group*groupID); //filter ID
+    int num_channels_per_group = num_channels / numGroups;
+    int num_output_per_group = num_output / numGroups;
 
     Dtype output_px = 0.0f; //calculate in this register, then write to output buffer
 
-    //TODO: consider groupID in calculating filter index?
-    int filterIdx_base = f * (num_channels * kernelSize * kernelSize);
+    int filterIdx_base = f * (num_channels_per_group * kernelSize * kernelSize);
 
-    int inputIdx_base = imgID   * (numGroups * num_channels * height_in * width_in) +
-                        groupID * (num_channels * height_in * width_in);
+    int inputIdx_base = imgID   * (num_channels * height_in * width_in) +
+                        groupID * (num_channels_per_group * height_in * width_in);
 
-    //if( (x < width_out) && (y < height_out) && (f < num_output) )
-    if( (x < 5) && (y < 5) && (f < 5) ) //test
+    if( (x < width_out) && (y < height_out) && (f < num_output) )
+    //if( (x < 5) && (y < 5) && (f < 5) ) //test
     {
 
-        for(int ch=0; ch < num_channels; ch++)
+        for(int ch=0; ch < num_channels_per_group; ch++)
         {
             for(int yLocal=0; yLocal < kernelSize; yLocal++)
             {
@@ -71,9 +77,9 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
     #if 1
                     //TODO: consider stride in inputIdx
                     int inputIdx = inputIdx_base +
-                                   ch          * (height_in * width_in) + 
-                                   (y+yLocal)  * (width_in) + 
-                                   (x+xLocal);
+                                   ch                   * (height_in * width_in) + 
+                                   (y*stride + yLocal)  * (width_in) + 
+                                   (x*stride + xLocal);
 
                     //index of current element in filter f
                     int filterIdx = filterIdx_base +
@@ -81,18 +87,21 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                     yLocal * (kernelSize) + 
                                     xLocal;
     #endif
-                    //int inputIdx = 0;
-                    //int filterIdx = 0;
-
                     output_px += bottom_data[inputIdx] * filters[filterIdx]; 
                 }
             }
         }
 
-        int outputIdx = imgID   * (numGroups * num_output * height_out * width_out) +
-                        groupID * (num_output * height_out * width_out) +
+        int outputIdx = imgID   * (num_output * height_out * width_out) +
+                        //groupID * (num_output_per_group * height_out * width_out) +
                         f       * (height_out * width_out) +
                         y       * (width_out) + x; 
+
+        //assert(outputIdx < top_data_length); 
+        if(outputIdx >= top_data_length){
+            printf("out of top_data bounds\n");
+        }
+
 
         top_data[outputIdx] = output_px;
     }
@@ -114,7 +123,7 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     block.z = 4; //tune?
     int nx = width_out / (block.x*1); 
     int ny = height_out / (block.y*1);
-    int nz = num_output; // # of 3D filters
+    int nz = num_output / (block.z * numGroups); // # of 3D filters
     grid.x = (width_out % block.x == 0) ? nx : nx+1;
     grid.y = (height_out % block.y == 0) ? ny : ny+1;
     grid.z = (num_output % block.z == 0) ? nz : nz+1;
@@ -122,10 +131,24 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* top_data = (*top)[0]->mutable_gpu_data();
 
+    //int top_data_length_correct = (*top)[0]->count();
+    //int top_data_length_ours = 50 * num_output * height_out * width_out;
+    //printf("top_data_length_correct=%d, top_data_length_ours=%d \n", top_data_length_correct, top_data_length_ours);
+
     Conv_gpu_lowMem_kernel <<< grid, block >>> (bottom_data, top_data, filters,
                                                 stride, kernelSize, num_channels, height_in, width_in,
                                                 num_output, height_out, width_out,
                                                 imgID, numGroups, groupID);    
+
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+/*
+    printf(" stride=%d, kernelSize=%d, num_channels=%d, height_in=%d, width_in=%d,"
+            "num_output=%d, height_out=%d, width_out=%d,"
+            "imgID=%d, numGroups=%d, groupID=%d \n", stride, kernelSize, num_channels, height_in, width_in,
+                                                num_output, height_out, width_out,
+                                                imgID, numGroups, groupID);
+*/
 }
 
 void hello_cuda()

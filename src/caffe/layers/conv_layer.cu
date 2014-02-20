@@ -111,42 +111,47 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 
-  bool use_low_mem_conv = true; //TODO: expose this to user
+  //bool use_low_mem_conv = true; //TODO: expose this to user
+  bool use_low_mem_conv = false;
 
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  Dtype* col_data = col_buffer_.mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  for (int n = 0; n < NUM_; ++n) {
 
-    if(use_low_mem_conv){
+  Dtype* col_data = NULL;
+  if(!use_low_mem_conv)
+  {
+    //init extra buffer for BLAS
+    col_data = col_buffer_.mutable_gpu_data(); //only allocated when touched
+  }
 
-      for(int g = 0; g < GROUP_; ++g) {
-#if 1
+  for (int n = 0; n < NUM_; ++n) 
+  {
+    if(use_low_mem_conv)
+    {
+      for(int g = 0; g < GROUP_; ++g) 
+      {
         Conv_gpu_lowMem<Dtype>(bottom, top, weight, 
                         STRIDE_, KSIZE_, CHANNELS_, HEIGHT_, WIDTH_,
                         NUM_OUTPUT_, HEIGHT_OUT_, WIDTH_OUT_,
                         n, GROUP_, g);
-#endif
-        hello_cuda();
-        //hello_cuda_template<Dtype>();
-        hello_cuda_template<Dtype>(bottom);
       }
-
     }
 
     else{ //use BLAS
       // First, im2col
       im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
           WIDTH_, KSIZE_, STRIDE_, col_data);
+
       // Second, innerproduct with groups
       for (int g = 0; g < GROUP_; ++g) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
           (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
+        CUDA_CHECK(cudaDeviceSynchronize()); //for speed tests
       }
     }
 
