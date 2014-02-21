@@ -44,9 +44,6 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                        int num_output, int height_out, int width_out,
                                        int imgID, int numGroups, int groupID)
 {
-
-    int top_data_length = 50 * num_output * height_out * width_out; 
-
     //top-left anchor in input image:
     int x = (blockIdx.x*blockDim.x + threadIdx.x);
     int y = (blockIdx.y*blockDim.y + threadIdx.y);
@@ -54,7 +51,6 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
     int num_filters_per_group = num_output / numGroups; 
     int f = (blockIdx.z*blockDim.z + threadIdx.z) + (num_filters_per_group*groupID); //filter ID
     int num_channels_per_group = num_channels / numGroups;
-    int num_output_per_group = num_output / numGroups;
 
     Dtype output_px = 0.0f; //calculate in this register, then write to output buffer
 
@@ -63,8 +59,11 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
     int inputIdx_base = imgID   * (num_channels * height_in * width_in) +
                         groupID * (num_channels_per_group * height_in * width_in);
 
+    //TODO: cooperatively prefetch bottom_data to shmem
+
+    //TODO: put filters in constant mem
+
     if( (x < width_out) && (y < height_out) && (f < num_output) )
-    //if( (x < 5) && (y < 5) && (f < 5) ) //test
     {
 
         for(int ch=0; ch < num_channels_per_group; ch++)
@@ -73,9 +72,6 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
             {
                 for(int xLocal=0; xLocal < kernelSize; xLocal++)
                 {
-
-    #if 1
-                    //TODO: consider stride in inputIdx
                     int inputIdx = inputIdx_base +
                                    ch                   * (height_in * width_in) + 
                                    (y*stride + yLocal)  * (width_in) + 
@@ -86,22 +82,25 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                     ch     * (kernelSize * kernelSize) +
                                     yLocal * (kernelSize) + 
                                     xLocal;
-    #endif
+
                     output_px += bottom_data[inputIdx] * filters[filterIdx]; 
+                    //output_px += bottom_data[inputIdx] * 1.0f;
+                    //output_px += filters[filterIdx];
                 }
             }
         }
 
         int outputIdx = imgID   * (num_output * height_out * width_out) +
-                        //groupID * (num_output_per_group * height_out * width_out) +
                         f       * (height_out * width_out) +
                         y       * (width_out) + x; 
 
-        //assert(outputIdx < top_data_length); 
+
+        /*
+        int top_data_length = 50 * num_output * height_out * width_out;
         if(outputIdx >= top_data_length){
             printf("out of top_data bounds\n");
         }
-
+        */
 
         top_data[outputIdx] = output_px;
     }
