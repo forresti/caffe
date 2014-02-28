@@ -139,7 +139,7 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
                                                 num_output, height_out, width_out,
                                                 imgID, numGroups, groupID);    
 
-    CUDA_CHECK(cudaDeviceSynchronize());
+    //CUDA_CHECK(cudaDeviceSynchronize());
 
 /*
     printf(" stride=%d, kernelSize=%d, num_channels=%d, height_in=%d, width_in=%d,"

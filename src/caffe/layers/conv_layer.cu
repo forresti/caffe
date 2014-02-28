@@ -111,8 +111,8 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 
-  bool use_low_mem_conv = true; //TODO: expose this to user
-  //bool use_low_mem_conv = false;
+  //bool use_low_mem_conv = true; //TODO: expose this to user
+  bool use_low_mem_conv = false;
 
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -151,7 +151,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
           (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
-        CUDA_CHECK(cudaDeviceSynchronize()); //for speed tests
+        //CUDA_CHECK(cudaDeviceSynchronize()); //for speed tests
       }
     }
 

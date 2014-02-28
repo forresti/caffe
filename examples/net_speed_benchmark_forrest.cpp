@@ -72,13 +72,12 @@ int main(int argc, char** argv) {
     for (int j = 0; j < repeat; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
+    CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
     double layerTime = read_timer() - start; 
     //printf("    %s forward: %f ms\n", layername.c_str(), layerTime); 
     printf("    %s forward: %f ms\n", layername.c_str(), layerTime/repeat); 
 
 
-    //LOG(ERROR) << layername << "\tforward: "
-    //    << float(clock() - start) / CLOCKS_PER_SEC << " seconds.";
   }
 #if 0
   for (int i = layers.size() - 1; i >= 0; --i) {
