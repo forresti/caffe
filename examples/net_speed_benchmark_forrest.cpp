@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
-  int repeat = 20;
+  int repeat = 5;
 
   NetParameter net_param;
   ReadProtoFromTextFile(argv[1],

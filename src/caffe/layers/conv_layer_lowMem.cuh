@@ -15,7 +15,7 @@ namespace caffe {
 
 
 //__constant__ Dtype d_constMemPool[16384]; //TODO: fine-tune this size (and perhaps check for 'double')
-__constant__ float d_constMemPool[32768]; 
+//__constant__ float d_constMemPool[32768]; 
 
 // low-memory convolution
 
@@ -64,6 +64,9 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                         groupID * (num_channels_per_group * height_in * width_in);
 
     //TODO: cooperatively prefetch bottom_data to shmem
+    extern __shared__ float shmem[]; //size is selected from host <<<..., shmem_per_block>>>
+    shmem[200] = 10;
+
 
     //TODO: put filters in constant mem
 
@@ -87,7 +90,7 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                     yLocal * (kernelSize) + 
                                     xLocal;
 
-                    output_px += bottom_data[inputIdx] * filters[filterIdx]; 
+                    output_px += bottom_data[inputIdx] * filters[filterIdx] + shmem[200]; 
                     //output_px += bottom_data[inputIdx] * 1.0f;
                     //output_px += filters[filterIdx];
                 }
@@ -123,8 +126,8 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
 
 //    CHECK_CUDART(cudaMemcpyToSymbol(c_Kernel, h_Kernel, KERNEL_LENGTH * sizeof(float)));
 
-    float* d_filters = &d_constMemPool[0];
-    CUDA_CHECK(cudaMemcpyToSymbol(d_filters, filters, kernelSize * kernelSize * num_channels * num_output * sizeof(float)));
+    //float* d_filters = &d_constMemPool[0];
+    //CUDA_CHECK(cudaMemcpyToSymbol(d_filters, filters, kernelSize * kernelSize * num_channels * num_output * sizeof(float)));
 
     dim3 grid;
     dim3 block;
@@ -145,7 +148,13 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     //int top_data_length_ours = 50 * num_output * height_out * width_out;
     //printf("top_data_length_correct=%d, top_data_length_ours=%d \n", top_data_length_correct, top_data_length_ours);
 
-    Conv_gpu_lowMem_kernel <<< grid, block >>> (bottom_data, top_data, filters,
+    int xRange_per_block = block.x + kernelSize - 1;
+    int yRange_per_block = block.y + kernelSize - 1;
+    int shmem_per_block = xRange_per_block * yRange_per_block * num_channels*sizeof(Dtype);
+printf("shmem_per_block=%d \n", shmem_per_block);
+
+    Conv_gpu_lowMem_kernel <<< grid, block, shmem_per_block >>> ( 
+                                                bottom_data, top_data, filters,
                                                 stride, kernelSize, num_channels, height_in, width_in,
                                                 num_output, height_out, width_out,
                                                 imgID, numGroups, groupID);    
