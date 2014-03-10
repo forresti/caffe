@@ -131,9 +131,9 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
 
     dim3 grid;
     dim3 block;
-    block.x = 4;
-    block.y = 4;
-    block.z = 16; //tune?
+    block.x = 2;
+    block.y = 2;
+    block.z = 8; //tune?
     int nx = width_out / (block.x*1); 
     int ny = height_out / (block.y*1);
     int nz = num_output / (block.z * numGroups); // # of 3D filters
@@ -151,7 +151,7 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     int xRange_per_block = block.x + kernelSize - 1;
     int yRange_per_block = block.y + kernelSize - 1;
     int shmem_per_block = xRange_per_block * yRange_per_block * num_channels*sizeof(Dtype);
-printf("shmem_per_block=%d \n", shmem_per_block);
+//printf("shmem_per_block=%d \n", shmem_per_block);
 
     Conv_gpu_lowMem_kernel <<< grid, block, shmem_per_block >>> ( 
                                                 bottom_data, top_data, filters,
