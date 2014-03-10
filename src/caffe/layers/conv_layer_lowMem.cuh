@@ -13,6 +13,10 @@ using namespace std;
 
 namespace caffe {
 
+
+//__constant__ Dtype d_constMemPool[16384]; //TODO: fine-tune this size (and perhaps check for 'double')
+__constant__ float d_constMemPool[32768]; 
+
 // low-memory convolution
 
 /*
@@ -115,11 +119,18 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
                      int num_output, int height_out, int width_out,
                      int imgID, int numGroups, int groupID)
 {
+
+
+//    CHECK_CUDART(cudaMemcpyToSymbol(c_Kernel, h_Kernel, KERNEL_LENGTH * sizeof(float)));
+
+    float* d_filters = &d_constMemPool[0];
+    CUDA_CHECK(cudaMemcpyToSymbol(d_filters, filters, kernelSize * kernelSize * num_channels * num_output * sizeof(float)));
+
     dim3 grid;
     dim3 block;
-    block.x = 16;
-    block.y = 16;
-    block.z = 4; //tune?
+    block.x = 4;
+    block.y = 4;
+    block.z = 16; //tune?
     int nx = width_out / (block.x*1); 
     int ny = height_out / (block.y*1);
     int nz = num_output / (block.z * numGroups); // # of 3D filters
