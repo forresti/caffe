@@ -65,7 +65,7 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
 
     //TODO: cooperatively prefetch bottom_data to shmem
     extern __shared__ float shmem[]; //size is selected from host <<<..., shmem_per_block>>>
-    shmem[200] = 10;
+    //shmem[200] = 10;
 
 
     //TODO: put filters in constant mem
@@ -75,6 +75,7 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
 
         for(int ch=0; ch < num_channels_per_group; ch++)
         {
+            __syncthreads();
             for(int yLocal=0; yLocal < kernelSize; yLocal++)
             {
                 for(int xLocal=0; xLocal < kernelSize; xLocal++)
@@ -90,7 +91,7 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                     yLocal * (kernelSize) + 
                                     xLocal;
 
-                    output_px += bottom_data[inputIdx] * filters[filterIdx] + shmem[200]; 
+                    output_px += bottom_data[inputIdx] * filters[filterIdx]; 
                     //output_px += bottom_data[inputIdx] * 1.0f;
                     //output_px += filters[filterIdx];
                 }
@@ -131,9 +132,9 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
 
     dim3 grid;
     dim3 block;
-    block.x = 2;
-    block.y = 2;
-    block.z = 8; //tune?
+    block.x = 4;
+    block.y = 4;
+    block.z = 16; //tune?
     int nx = width_out / (block.x*1); 
     int ny = height_out / (block.y*1);
     int nz = num_output / (block.z * numGroups); // # of 3D filters
@@ -150,8 +151,9 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
 
     int xRange_per_block = block.x + kernelSize - 1;
     int yRange_per_block = block.y + kernelSize - 1;
-    int shmem_per_block = xRange_per_block * yRange_per_block * num_channels*sizeof(Dtype);
-//printf("shmem_per_block=%d \n", shmem_per_block);
+    //int shmem_per_block = xRange_per_block * yRange_per_block * num_channels*sizeof(Dtype);
+    int shmem_per_block = xRange_per_block * yRange_per_block;
+    //printf("shmem_per_block=%d \n", shmem_per_block);
 
     Conv_gpu_lowMem_kernel <<< grid, block, shmem_per_block >>> ( 
                                                 bottom_data, top_data, filters,
