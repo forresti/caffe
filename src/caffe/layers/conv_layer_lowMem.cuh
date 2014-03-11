@@ -40,6 +40,7 @@ inputs:
 */
 
 
+#define USE_SHMEM
 
 // each thread owns an output pixel and a filter.
 template <typename Dtype>
@@ -49,8 +50,8 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
                                        int imgID, int numGroups, int groupID)
 {
     //top-left anchor in input image:
-    int x = (blockIdx.x*blockDim.x + threadIdx.x);
-    int y = (blockIdx.y*blockDim.y + threadIdx.y);
+    int xGlobal = (blockIdx.x*blockDim.x + threadIdx.x);
+    int yGlobal = (blockIdx.y*blockDim.y + threadIdx.y);
 
     int num_filters_per_group = num_output / numGroups; 
     int f = (blockIdx.z*blockDim.z + threadIdx.z) + (num_filters_per_group*groupID); //filter ID
@@ -63,44 +64,79 @@ __global__ void Conv_gpu_lowMem_kernel(const Dtype* bottom_data, Dtype* top_data
     int inputIdx_base = imgID   * (num_channels * height_in * width_in) +
                         groupID * (num_channels_per_group * height_in * width_in);
 
-    //TODO: cooperatively prefetch bottom_data to shmem
+    #ifdef USE_SHMEM
+    //cooperatively prefetch bottom_data to shmem
     extern __shared__ float shmem[]; //size is selected from host <<<..., shmem_per_block>>>
-    //shmem[200] = 10;
+    
+    //for shmem indexing:
+    int xLo = blockIdx.x * blockDim.x * stride; //stride is for stuff like conv1, where we skip some anchor locations.
+    int xHi = xLo + (blockDim.x * stride) + kernelSize - 1; //assume one conv per thread; top-left anchor.
+    int yLo = blockIdx.y * blockDim.y * stride;
+    int yHi = yLo + (blockDim.y * stride) + kernelSize - 1;
+    int x_stride_shmem = xHi - xLo; 
 
+    int xStart_shmem = threadIdx.x * stride; //top-left anchor of input img in shmem for my thread
+    int yStart_shmem = threadIdx.y * stride;
+    #endif
 
     //TODO: put filters in constant mem
 
-    if( (x < width_out) && (y < height_out) && (f < num_output) )
+    if( (xGlobal < width_out) && (yGlobal < height_out) && (f < num_output) )
     {
 
         for(int ch=0; ch < num_channels_per_group; ch++)
         {
+            #ifdef USE_SHMEM
+            //cooperatively prefetch bottom_data to shmem (for current channel)
+            for(int xLoad = (xLo + threadIdx.x); xLoad<xHi; xLoad+=blockDim.x)
+            {
+                for(int yLoad = (yLo + threadIdx.y); yLoad<yHi; yLoad+=blockDim.y)
+                { 
+                    int inputIdx_to_shmem = inputIdx_base + 
+                                            ch    * (height_in * width_in) +
+                                            yLoad * width_in +
+                                            xLoad;
+
+                    //TODO: test that inputIdx_to_shmem is less than the total bottom_data buffer size.
+                    //TODO: test that shmem[index] is less than shmem size allocated on host. 
+                    shmem[ ((yLoad - yLo) * x_stride_shmem) + (xLoad - xLo) ] = bottom_data[inputIdx_to_shmem];
+                }
+            }
             __syncthreads();
+            #endif
+
             for(int yLocal=0; yLocal < kernelSize; yLocal++)
             {
                 for(int xLocal=0; xLocal < kernelSize; xLocal++)
                 {
-                    int inputIdx = inputIdx_base +
-                                   ch                   * (height_in * width_in) + 
-                                   (y*stride + yLocal)  * (width_in) + 
-                                   (x*stride + xLocal);
-
-                    //index of current element in filter f
+                     //index of current element in filter f
                     int filterIdx = filterIdx_base +
                                     ch     * (kernelSize * kernelSize) +
                                     yLocal * (kernelSize) + 
                                     xLocal;
 
+                    #ifdef USE_SHMEM
+                    int inputIdx = ((yStart_shmem + yLocal) * x_stride_shmem) + (xStart_shmem + xLocal);
+                    output_px += shmem[inputIdx] * filters[filterIdx];
+                    //output_px += shmem[inputIdx];
+
+                    #else
+                    int inputIdx = inputIdx_base +
+                                   ch                   * (height_in * width_in) + 
+                                   (yGlobal*stride + yLocal)  * (width_in) + 
+                                   (xGlobal*stride + xLocal);
+
                     output_px += bottom_data[inputIdx] * filters[filterIdx]; 
                     //output_px += bottom_data[inputIdx] * 1.0f;
                     //output_px += filters[filterIdx];
+                    #endif
                 }
             }
         }
 
         int outputIdx = imgID   * (num_output * height_out * width_out) +
                         f       * (height_out * width_out) +
-                        y       * (width_out) + x; 
+                        yGlobal * (width_out) + xGlobal; 
 
 
         /*
@@ -149,10 +185,10 @@ void Conv_gpu_lowMem(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* t
     //int top_data_length_ours = 50 * num_output * height_out * width_out;
     //printf("top_data_length_correct=%d, top_data_length_ours=%d \n", top_data_length_correct, top_data_length_ours);
 
-    int xRange_per_block = block.x + kernelSize - 1;
-    int yRange_per_block = block.y + kernelSize - 1;
+    int xRange_per_block = (block.x + 1)*stride + kernelSize - 1; //TODO: check if 'stride' is used reasonably here.
+    int yRange_per_block = (block.y + 1)*stride + kernelSize - 1; //the '+1' is just for convenience (and possibly avoiding bank conflicts)
     //int shmem_per_block = xRange_per_block * yRange_per_block * num_channels*sizeof(Dtype);
-    int shmem_per_block = xRange_per_block * yRange_per_block;
+    int shmem_per_block = xRange_per_block * yRange_per_block * sizeof(Dtype);
     //printf("shmem_per_block=%d \n", shmem_per_block);
 
     Conv_gpu_lowMem_kernel <<< grid, block, shmem_per_block >>> ( 

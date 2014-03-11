@@ -1,6 +1,40 @@
 
 time, averaged over 10 runs per layer in GPU mode (K20).
 
+
+
+first try at shmem (not handling conv1's long strides). (blocks x,y,f = 4,4,16)
+    3/10/14.
+    data forward: 39.577930 ms
+    conv1 forward: 126.706152 ms
+    relu1 forward: 0.839600 ms
+    pool1 forward: 1.168164 ms
+    norm1 forward: 0.729590 ms
+    pad2 forward: 0.615820 ms
+    conv2 forward: 527.965820 ms
+    relu2 forward: 0.544043 ms
+    pool2 forward: 0.854395 ms
+    norm2 forward: 0.441602 ms
+    pad3 forward: 0.385400 ms
+    conv3 forward: 598.570557 ms
+    relu3 forward: 0.195996 ms
+    pad4 forward: 0.573389 ms
+    conv4 forward: 456.846387 ms
+    relu4 forward: 0.195996 ms
+    pad5 forward: 0.572803 ms
+    conv5 forward: 317.893408 ms
+    relu5 forward: 0.133594 ms
+    pool5 forward: 0.208203 ms
+    fc6 forward: 4.544580 ms
+    relu6 forward: 0.012842 ms
+    drop6 forward: 0.044189 ms
+    fc7 forward: 1.859766 ms
+    relu7 forward: 0.012402 ms
+    drop7 forward: 0.043018 ms
+    fc8 forward: 0.671826 ms
+    prob forward: 0.604639 ms
+    accuracy forward: 0.048389 ms
+
 simple low-mem conv (blocks x,y,f = 16,16,4)
   avg time per layer: 
     data forward: 31.313110 ms
