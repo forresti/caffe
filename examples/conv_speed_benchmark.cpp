@@ -29,8 +29,9 @@ double read_timer(){
 //set up and benchmark layers without actually having a network.
 template<typename Dtype>
 int conv_speed_test(int num, int channels_in, int height_in, int width_in,
-                    int group, int kernelSize, int convStride, int num_output)
+                    int group, int kernelSize, int convStride, int num_output, string niceName)
 {
+    //TODO: calculate FLOPS based on input size
 
     //shared_ptr<Blob<Dtype> > blob_bottom(new Blob<Dtype>(num, channels_in, height_in, width_in));
     //shared_ptr<Blob<Dtype> > blob_top(new Blob<Dtype>()); //'top' dims are calculated in ConvolutionLayer::SetUp()
@@ -53,7 +54,7 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     ConvolutionLayer<Dtype> convLayer(layerParams);
     convLayer.SetUp(blob_bottom_vec_, &(blob_top_vec_));
 
-    //TODO: print 'user-provided layer name'
+    // THE BENCHMARK:
     int num_runs = 10;
     double start = read_timer();
     for (int j = 0; j < num_runs; ++j)
@@ -62,8 +63,7 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
     double layerTime = read_timer() - start; 
-    //printf("    %s forward: %f ms\n", layername.c_str(), layerTime/repeat);
-    printf("    forward: %f ms\n", layerTime/num_runs);
+    printf("    %s forward: %f ms\n", niceName.c_str(), layerTime/num_runs);
     
     return 0; //TODO: return 1 if error?
 }
@@ -82,9 +82,32 @@ int main(int argc, char** argv) {
     
     // alexnet conv1
     conv_speed_test<float>(NUM_, 3, 227, 227, 
-                           1, 11, 4, 96);
+                           1, 11, 4, 96, "alexnet conv1");
+
+    //pool1: stride=2
+
+    conv_speed_test<float>(NUM_, 96, 27, 27,
+                           2, 5, 1, 256, "alexnet conv2");
+
+    //pool2: stride=2
+
+    conv_speed_test<float>(NUM_, 256, 13, 13,
+                           1, 3, 1, 384, "alexnet conv3"); //slightly faster than in net_speed_test_forrest (15ms vs 20ms, in GPU mode)
+
+    //there is no pool3
+
+    conv_speed_test<float>(NUM_, 384, 13, 13,
+                           2, 3, 1, 384, "alexnet conv4");
+
+    //there is no pool4
+
+    conv_speed_test<float>(NUM_, 384, 13, 13,
+                           2, 3, 1, 2560, "alexnet conv5");
+
+
+    //TODO: sweep the space of kernelSize, stride, channels, num_output, etc.
 
     LOG(ERROR) << "*** Benchmark ends ***";
 
-  return 0;
+    return 0;
 }
