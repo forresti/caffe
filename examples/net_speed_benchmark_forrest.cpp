@@ -39,7 +39,7 @@ class LayerSummary{
 
 int main(int argc, char** argv) {
   cudaSetDevice(0);
-  Caffe::set_mode(Caffe::GPU);
+  Caffe::set_mode(Caffe::CPU);
   Caffe::set_phase(Caffe::TRAIN);
   int repeat = 5;
 

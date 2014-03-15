@@ -26,6 +26,18 @@ double read_timer(){
     return (double)((start.tv_sec) + 1.0e-6 * (start.tv_usec)) * 1000; //in milliseconds
 }
 
+template <typename Dtype>
+class ConvolutionLayer_notProtected : protected ConvolutionLayer<Dtype> 
+{
+    //using ConvolutionLayer<Dtype>::ConvolutionLayer; //inherit constructors
+
+    public:
+      // hack around 'protected' Forward_cpu in ConvolutionLayer
+      void Forward_cpu_notProtected(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top){
+          Forward_cpu(bottom, top);
+      }
+};
+
 //set up and benchmark layers without actually having a network.
 template<typename Dtype>
 int conv_speed_test(int num, int channels_in, int height_in, int width_in,
@@ -51,10 +63,13 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     layerParams.mutable_bias_filler()->set_type("gaussian");
 
     ConvolutionLayer<Dtype> convLayer(layerParams);
+    //ConvolutionLayer_notProtected<Dtype> convLayer(layerParams);
 
     convLayer.SetUp(blob_bottom_vec_, &(blob_top_vec_));
 
     //TODO add timer and do multiple runs.
+
+    convLayer.Forward(blob_bottom_vec_, &(blob_top_vec_));
 
     return 0; //TODO: return 1 if error?
 }

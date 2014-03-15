@@ -76,6 +76,87 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
 };
 
+//pseudo-code:
+#if 0 
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Forward_cpu_lowMem(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+
+
+
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  Dtype* col_data = col_buffer_.mutable_cpu_data();
+  const Dtype* weight = this->blobs_[0]->cpu_data();
+  int weight_offset = M_ * K_;
+  int col_offset = K_ * N_;
+  int top_offset = M_ * N_;
+
+  /*
+  //ORIGINAL CODE:
+  for (int n = 0; n < NUM_; ++n) {
+    // First, im2col
+    im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
+        WIDTH_, KSIZE_, STRIDE_, col_data);
+    // Second, innerproduct with groups
+    for (int g = 0; g < GROUP_; ++g) {
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
+        (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+        (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
+    }
+    */
+
+    // First, transpose input data with 'channels' as the fast dimension
+    //     bottom_data(img, group, channel, y, x) -> bottom_data_trans(group, img, y, x, channel) //row-major notation
+
+    //bottom_data_trans = transpose(bottom_data); //TODO
+
+    // Second, transpose filters ("weights") with 'channels' as the fast dimension
+    //     weights(filterID, channels, y, x) -> weights_trans(y, x, filterID, channels) //row-major notation
+
+    //weight_trans = transpose(weight); //TODO
+
+    // Third, multiply by each (x,y) location in filters. 
+    //     (one BLAS call per (x,y) location in filters)
+
+    for (int g = 0; g < GROUP_; ++g){
+        for(int filterY=0; filterY<kernelSize; filterY++){
+            for(int filterX=0; filterX<kernelSize; filterX++){
+                
+                //A = filters, "weight_trans"
+                //B = input data, "bottom_data_trans"
+
+                caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,  
+                                     NUM_OUTPUT_, //M: rows in A
+                                     NUM_ * HEIGHT_OUT_ * WIDTH_OUT_, //N: cols in B
+                                     CHANNELS_ / GROUP_, //K: cols in A == rows in B 
+                                     (Dtype)1., //alpha
+                                     weights_trans, //A
+                                     TODO, //lda = rows in A (unless I'm using padding) 
+                                     bottom_data_trans, //B
+                                     TODO, //ldb = rows in B (not trans(B)) -- remember, col major.
+                                     (Dtype)1., //beta (using 1 means we +=C instead of overwriting C)
+                                     top_data_trans, //C
+                                     TODO /* ldc = rows in C */ );
+ 
+            }
+        }
+    } 
+
+    // Fourth, un-transpose output data (might be avoidable with clever BLAS settings)
+    //     top_data(group, img, y, x, channel) ->  top_data(img, group, channel, y, x) //row-major notation
+
+    // Fifth, add bias
+    if (biasterm_) {
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, NUM_OUTPUT_,
+          N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+          (Dtype)1., top_data + (*top)[0]->offset(n));
+    }
+  }
+
+}
+#endif
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
