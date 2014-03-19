@@ -81,9 +81,6 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu_lowMem(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-
-
-
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   Dtype* col_data = col_buffer_.mutable_cpu_data();
