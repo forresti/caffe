@@ -64,8 +64,8 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
     double layerTime = read_timer() - start; 
-    printf("    %s forward: %f ms\n", niceName.c_str(), layerTime/num_runs);
-    
+    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime/num_runs << " ms"; 
+ 
     return 0; //TODO: return 1 if error?
 }
 
@@ -96,10 +96,11 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
     double layerTime = read_timer() - start;
-    printf("    %s forward: %f ms\n", niceName.c_str(), layerTime/num_runs);
+    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime/num_runs << " ms";
 }
 
 int main(int argc, char** argv) {
+    ::google::InitGoogleLogging(argv[0]);
     cudaSetDevice(0);
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_phase(Caffe::TEST);
