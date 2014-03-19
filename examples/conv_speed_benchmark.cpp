@@ -69,7 +69,7 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     return 0; //TODO: return 1 if error?
 }
 
-//TODO: remove unused variables (e.g. num_output?)
+//TODO: remove unused variables (e.g. num_output and group?)
 template<typename Dtype>
 int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
                     int group, int kernelSize, int convStride, int num_output, string niceName)
@@ -95,8 +95,10 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
         }
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
-    double layerTime = read_timer() - start;
-    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime/num_runs << " ms";
+    double layerTime = (read_timer() - start) / num_runs;
+    double gb_moved = (num * channels_in * height_in * width_in / (convStride * convStride)) / 1e9;
+    double gb_per_sec = gb_moved / (layerTime / 1000); // 1000 for ms -> sec. 
+    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime << " ms, " << gb_per_sec << " GB/s";
 }
 
 int main(int argc, char** argv) {
