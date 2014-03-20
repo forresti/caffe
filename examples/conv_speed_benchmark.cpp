@@ -81,13 +81,10 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
     Blob<Dtype> col_buffer_;
     col_buffer_.Reshape(1, channels_in * kernelSize * kernelSize, height_out, width_out);
 
-    //TODO: check CPU or GPU.
-
     Dtype* col_data = NULL;
     const Dtype* bottom_data = NULL;
 
     int mode = Caffe::mode(); // enum, either 'CPU' or 'GPU'
-    //printf("    Caffe.mode()=%d, Caffe::CPU=%d, Caffe::GPU=%d \n", mode, Caffe::CPU, Caffe::GPU);
     if(mode == Caffe::GPU){
         col_data = col_buffer_.mutable_gpu_data();
         bottom_data = blob_bottom_->gpu_data();
