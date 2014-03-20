@@ -82,16 +82,34 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
     col_buffer_.Reshape(1, channels_in * kernelSize * kernelSize, height_out, width_out);
 
     //TODO: check CPU or GPU.
-    Dtype* col_data = col_buffer_.mutable_gpu_data();
-    const Dtype* bottom_data = blob_bottom_->gpu_data();
+
+    Dtype* col_data = NULL;
+    const Dtype* bottom_data = NULL;
+
+    int mode = Caffe::mode(); // enum, either 'CPU' or 'GPU'
+    //printf("    Caffe.mode()=%d, Caffe::CPU=%d, Caffe::GPU=%d \n", mode, Caffe::CPU, Caffe::GPU);
+    if(mode == Caffe::GPU){
+        col_data = col_buffer_.mutable_gpu_data();
+        bottom_data = blob_bottom_->gpu_data();
+    }
+    else if(mode == Caffe::CPU){
+        col_data = col_buffer_.mutable_cpu_data();
+        bottom_data = blob_bottom_->cpu_data();
+    } //else unknown mode.
     int num_runs = 10;
     double start = read_timer();
     for (int j = 0; j < num_runs; ++j)
     {
         for (int n = 0; n < num; ++n) //each image in the batch
         {
-            im2col_gpu(bottom_data + blob_bottom_->offset(n), channels_in, height_in,
-                       width_in, kernelSize, convStride, col_data);
+            if(mode == Caffe::GPU){
+                im2col_gpu(bottom_data + blob_bottom_->offset(n), channels_in, height_in,
+                           width_in, kernelSize, convStride, col_data);
+            }
+            else if(mode == Caffe::CPU){
+                im2col_cpu(bottom_data + blob_bottom_->offset(n), channels_in, height_in,
+                           width_in, kernelSize, convStride, col_data);
+            }
         }
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
@@ -104,7 +122,7 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
 int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
     cudaSetDevice(0);
-    Caffe::set_mode(Caffe::GPU);
+    Caffe::set_mode(Caffe::CPU);
     Caffe::set_phase(Caffe::TEST);
 
 //    NetParameter net_param;
