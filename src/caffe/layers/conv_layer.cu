@@ -15,11 +15,19 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  Dtype* col_data = col_buffer_.mutable_gpu_data();
+  //Dtype* col_data = col_buffer_.mutable_gpu_data();
+
+  Blob<Dtype> col_buffer_local_;
+  int height_out = (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
+  int width_out = (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
+  col_buffer_local_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out); //freed by destructor at end of this function.
+  Dtype* col_data = col_buffer_local_.mutable_gpu_data();
+
   const Dtype* weight = this->blobs_[0]->gpu_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
+#if 1
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
     im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
@@ -38,6 +46,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           (Dtype)1., top_data + (*top)[0]->offset(n));
     }
   }
+#endif
 }
 
 template <typename Dtype>
