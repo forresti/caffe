@@ -125,6 +125,8 @@ class Net {
   vector<float> params_lr_;
   // the weight decay multipliers
   vector<float> params_weight_decay_;
+  //im2col temporary storage
+  Blob<Dtype>* col_buffer_shared_;  
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

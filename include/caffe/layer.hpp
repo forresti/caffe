@@ -12,6 +12,9 @@ using std::vector;
 
 namespace caffe {
 
+template<typename Dtype>
+struct Net;
+
 template <typename Dtype>
 class Layer {
  public:
@@ -33,6 +36,9 @@ class Layer {
   // SetUp: your function should implement this.
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
+
+  //SetUpPost: optionally provide the net for additional pointers/buffers
+  virtual void SetUpPost(Net<Dtype> &net){ }; 
 
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
