@@ -89,6 +89,9 @@ class Net {
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
   bool has_layer(const string& layer_name);
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
+ 
+  //for sizing col_buffer_shared_ appropriately 
+  void update_max_col_buffer_size(Blob<Dtype> const &col_buffer_stub_);
 
  protected:
   // Function to get misc parameters, e.g. the learning rate multiplier and
