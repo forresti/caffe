@@ -27,6 +27,17 @@ double read_timer(){
     return (double)((start.tv_sec) + 1.0e-6 * (start.tv_usec)) * 1000; //in milliseconds
 }
 
+double gflops_to_perform(int num, int channels_in, int height_in, int width_in,
+                    int group, int kernelSize, int convStride, int num_output)
+{
+
+    double gflops = ((double)height_in * width_in * channels_in * 
+                     kernelSize * kernelSize * num_output * num * 2) //*2 is for multiply+add
+                     / ((double)convStride * convStride * group * 1e9);
+
+    return gflops;
+}
+
 //set up and benchmark layers without actually having a network.
 template<typename Dtype>
 int conv_speed_test(int num, int channels_in, int height_in, int width_in,
@@ -63,8 +74,11 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
         convLayer.Forward(blob_bottom_vec_, &(blob_top_vec_));
     }
     CUDA_CHECK(cudaDeviceSynchronize()); //for accurate timing
-    double layerTime = read_timer() - start; 
-    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime/num_runs << " ms"; 
+    double layerTime = (read_timer() - start)/num_runs; 
+    double gflops_performed = gflops_to_perform(num, channels_in, height_in, width_in,
+                                                group, kernelSize, convStride, num_output);
+    double gflops_per_sec = gflops_performed / layerTime * 1000; //*1000 for ms to sec 
+    LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime << " ms, " << gflops_performed << " gflops ... " << gflops_per_sec << " gflops/sec"; 
  
     return 0; //TODO: return 1 if error?
 }
@@ -116,17 +130,9 @@ int im2col_speed_test(int num, int channels_in, int height_in, int width_in,
     LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime << " ms, " << gb_per_sec << " GB/s";
 }
 
-int main(int argc, char** argv) {
-    ::google::InitGoogleLogging(argv[0]);
-    cudaSetDevice(0);
-    Caffe::set_mode(Caffe::CPU);
-    Caffe::set_phase(Caffe::TEST);
-
-//    NetParameter net_param;
-//    ReadProtoFromTextFile(argv[1],
-//        &net_param);
-//    Net<float> caffe_net(net_param);
-
+//mimic alexnet dims, print out perf results.
+void alexnet_speed_test()
+{
     int NUM_ = 50;
     
     // alexnet conv1
@@ -167,6 +173,15 @@ int main(int argc, char** argv) {
     //TODO: sweep the space of kernelSize, stride, channels, num_output, etc.
 
     LOG(ERROR) << "*** Benchmark ends ***";
+}
+
+int main(int argc, char** argv) {
+    ::google::InitGoogleLogging(argv[0]);
+    cudaSetDevice(0);
+    Caffe::set_mode(Caffe::GPU);
+    Caffe::set_phase(Caffe::TEST);
+
+    alexnet_speed_test();
 
     return 0;
 }
