@@ -45,8 +45,6 @@ template<typename Dtype>
 int conv_speed_test(int num, int channels_in, int height_in, int width_in,
                     int group, int kernelSize, int convStride, int num_output, string niceName)
 {
-    //TODO: calculate FLOPS based on input size
-
     //shared_ptr<Blob<Dtype> > blob_bottom(new Blob<Dtype>(num, channels_in, height_in, width_in));
     //shared_ptr<Blob<Dtype> > blob_top(new Blob<Dtype>()); //'top' dims are calculated in ConvolutionLayer::SetUp()
 
@@ -198,7 +196,6 @@ void vary_input_size(){
 //3x3 filter is as good as bigger filters in terms of gflops/s (~1700 gflops/s with 55x55 planes.)
 void vary_filter_size(){
     LOG(ERROR) << "running 'vary filter size'";
-
     for(int filterSize=1; filterSize<10; filterSize++) //out of memory if >10
     { 
         ostringstream niceName;
@@ -211,8 +208,7 @@ void vary_filter_size(){
 
 void vary_channels_in(){
     LOG(ERROR) << "running 'num input channels'";
-
-   for(int channels_in=4; channels_in <= 2048; channels_in=channels_in*2) //
+    for(int channels_in=4; channels_in <= 2048; channels_in=channels_in*2) //
     { 
         ostringstream niceName;
         niceName << "channels_in = " << channels_in << ".";
@@ -222,6 +218,24 @@ void vary_channels_in(){
     }
 }
 
+void vary_batch_size()
+{
+    LOG(ERROR) << "running 'num batch size'";
+    for(int NUM_=1; NUM_<60; NUM_+=4)
+    { 
+        ostringstream niceName;
+        niceName << "NUM_ = " << NUM_ << ".";
+
+        conv_speed_test<float>(NUM_, 384, 55, 55, 
+                               2, 3, 1, 256, niceName.str());
+    }
+}
+
+
+//TODO: vary_num_filters
+//TODO: vary_num_groups
+//TODO: vary_batch_size
+
 int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
     cudaSetDevice(0);
@@ -229,6 +243,7 @@ int main(int argc, char** argv) {
     Caffe::set_phase(Caffe::TEST);
 
     //alexnet_speed_test();
+    vary_batch_size();
     vary_channels_in();
     vary_input_size();
     vary_filter_size();
