@@ -7,6 +7,7 @@
 #include <cstring>
 #include <ctime>
 #include <cstdio>
+#include <sstream>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -20,6 +21,7 @@
 #include <sys/time.h>
 
 using namespace caffe;
+using namespace std;
 
 double read_timer(){
     struct timeval start;
@@ -79,6 +81,9 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
                                                 group, kernelSize, convStride, num_output);
     double gflops_per_sec = gflops_performed / layerTime * 1000; //*1000 for ms to sec 
     LOG(ERROR) << "    " << niceName <<  " forward: " << layerTime << " ms, " << gflops_performed << " gflops ... " << gflops_per_sec << " gflops/sec"; 
+
+    delete blob_bottom_;
+    delete blob_top_;
  
     return 0; //TODO: return 1 if error?
 }
@@ -175,13 +180,58 @@ void alexnet_speed_test()
     LOG(ERROR) << "*** Benchmark ends ***";
 }
 
+// for the configuration below, bigger planes seem to give more gflops/s.
+// inputDim=8 and inputDim=16 both take ~20ms.
+void vary_input_size(){
+    LOG(ERROR) << "running 'vary input size'";
+
+    //experimentally, there doesnt seem to be much pwr-of-2 sensitivity 
+    for(int inputDim = 8; inputDim <= 128; inputDim = inputDim*2){ //out of memory if >=128.
+        ostringstream niceName;
+        niceName << "inputDim = " << inputDim << ".";
+
+        conv_speed_test<float>(50, 384, inputDim, inputDim,                           
+                               2, 3, 1, 256, niceName.str());
+    }
+}
+
+//3x3 filter is as good as bigger filters in terms of gflops/s (~1700 gflops/s with 55x55 planes.)
+void vary_filter_size(){
+    LOG(ERROR) << "running 'vary filter size'";
+
+    for(int filterSize=1; filterSize<10; filterSize++) //out of memory if >10
+    { 
+        ostringstream niceName;
+        niceName << "filterSize = " << filterSize << ".";
+
+        conv_speed_test<float>(50, 384, 55, 55, 
+                               2, filterSize, 1, 256, niceName.str());
+    }
+}
+
+void vary_channels_in(){
+    LOG(ERROR) << "running 'num input channels'";
+
+   for(int channels_in=4; channels_in <= 2048; channels_in=channels_in*2) //
+    { 
+        ostringstream niceName;
+        niceName << "channels_in = " << channels_in << ".";
+
+        conv_speed_test<float>(50, channels_in, 55, 55, 
+                               2, 3, 1, 256, niceName.str());
+    }
+}
+
 int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
     cudaSetDevice(0);
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_phase(Caffe::TEST);
 
-    alexnet_speed_test();
+    //alexnet_speed_test();
+    vary_channels_in();
+    vary_input_size();
+    vary_filter_size();
 
     return 0;
 }
