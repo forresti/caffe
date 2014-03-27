@@ -231,10 +231,20 @@ void vary_batch_size()
     }
 }
 
+void vary_num_groups()
+{
+    LOG(ERROR) << "running 'num groups'";
+    for(int group=1; group<=8; group=group*2)
+    { 
+        ostringstream niceName;
+        niceName << "num groups = " << group << ".";
 
+        conv_speed_test<float>(50, 384, 55, 55, 
+                               group, 3, 1, 256, niceName.str());
+    }
+}
 //TODO: vary_num_filters
 //TODO: vary_num_groups
-//TODO: vary_batch_size
 
 int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
@@ -243,6 +253,7 @@ int main(int argc, char** argv) {
     Caffe::set_phase(Caffe::TEST);
 
     //alexnet_speed_test();
+    vary_num_groups();
     vary_batch_size();
     vary_channels_in();
     vary_input_size();
