@@ -66,6 +66,8 @@ int conv_speed_test(int num, int channels_in, int height_in, int width_in,
     ConvolutionLayer<Dtype> convLayer(layerParams);
     convLayer.SetUp(blob_bottom_vec_, &(blob_top_vec_));
 
+//TODO: calculate im2col buf size, and print it out.
+
     // THE BENCHMARK:
     int num_runs = 10;
     double start = read_timer();
@@ -243,8 +245,19 @@ void vary_num_groups()
                                group, 3, 1, 256, niceName.str());
     }
 }
-//TODO: vary_num_filters
-//TODO: vary_num_groups
+
+void vary_num_filters()
+{
+    LOG(ERROR) << "running 'num filters'";
+    for(int num_output = 2; num_output < 10000; num_output=num_output*2)
+    { 
+        ostringstream niceName;
+        niceName << "num filters = " << num_output << ".";
+
+        conv_speed_test<float>(50, 384, 55, 55, 
+                               2, 3, 1, num_output, niceName.str());
+    }
+}
 
 int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
@@ -253,6 +266,7 @@ int main(int argc, char** argv) {
     Caffe::set_phase(Caffe::TEST);
 
     //alexnet_speed_test();
+    vary_num_filters();
     vary_num_groups();
     vary_batch_size();
     vary_channels_in();
