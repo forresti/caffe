@@ -92,6 +92,9 @@ class Net {
  
   //for sizing col_buffer_shared_ appropriately 
   void update_max_col_buffer_size(Blob<Dtype> const &col_buffer_stub_);
+  //im2col temporary storage
+  Blob<Dtype>* col_buffer_shared_;
+
 
  protected:
   // Function to get misc parameters, e.g. the learning rate multiplier and
@@ -128,8 +131,6 @@ class Net {
   vector<float> params_lr_;
   // the weight decay multipliers
   vector<float> params_weight_decay_;
-  //im2col temporary storage
-  Blob<Dtype>* col_buffer_shared_;  
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

@@ -7,6 +7,7 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/net.hpp"
 
 namespace caffe {
 
@@ -75,6 +76,17 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+// for shared im2col buf allocation
+// note: if SetUpPost() is never called, then we fall back to 
+//       using a separate im2col buffer for each conv layer.
+#if 1
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::SetUpPost(Net<Dtype> *net) {
+  //at this point, the col_buffer_ has a size from SetUp(), but it has not been allocated yet.
+  //net->update_max_col_buffer_size(col_buffer_); //pass the col_buffer_ dims to the net
+  //col_buffer_ = net->col_buffer_shared_; 
+}
+#endif
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

@@ -38,7 +38,7 @@ class Layer {
       vector<Blob<Dtype>*>* top) = 0;
 
   //SetUpPost: optionally provide the net for additional pointers/buffers
-  virtual void SetUpPost(Net<Dtype> &net){ }; 
+  virtual void SetUpPost(Net<Dtype> *net){ }; 
 
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these

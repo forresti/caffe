@@ -121,6 +121,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // After this layer is connected, set it up.
     // LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
+    Net<Dtype> *thisNet = this;
+    layers_[i]->SetUpPost(thisNet); 
     for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
       LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->num() << " "
           << top_vecs_[i][topid]->channels() << " "
@@ -367,6 +369,11 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
     LOG(WARNING) << "Unknown layer name " << layer_name;
   }
   return layer_ptr;
+}
+
+template <typename Dtype>
+void update_max_col_buffer_size(Blob<Dtype> const &col_buffer_stub_){
+
 }
 
 INSTANTIATE_CLASS(Net);

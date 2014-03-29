@@ -314,6 +314,7 @@ class ConvolutionLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void SetUpPost(Net<Dtype> *net);
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
