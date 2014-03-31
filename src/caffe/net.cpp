@@ -41,6 +41,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   int num_layers = param.layers_size();
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
       << "Incorrect bottom blob dimension specifications.";
+  // layers using a shared im2col buffer will update Net's max_col_buffer_count_
+  max_col_buffer_count_ = 0;  
   size_t memory_used = 0;
   // set the input blobs
   for (int i = 0; i < param.input_size(); ++i) {
@@ -158,6 +160,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       LOG(INFO) << layer_names_[i] << " does not need backward computation.";
     }
   }
+  // col_buffer_shared_ is the size of the largest im2col buffer space required by any layer
+  col_buffer_shared_.Reshape(max_col_buffer_count_, 1, 1, 1);
   // In the end, all remaining blobs are considered output blobs.
   for (set<string>::iterator it = available_blobs.begin();
       it != available_blobs.end(); ++it) {
@@ -173,6 +177,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
+  LOG(INFO) << "Memory required for shared col buf " << max_col_buffer_count_;
 }
 
 
@@ -372,8 +377,10 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
 }
 
 template <typename Dtype>
-void update_max_col_buffer_size(Blob<Dtype> const &col_buffer_stub_){
-
+void Net<Dtype>::update_max_col_buffer_count(Blob<Dtype> const &col_buffer_stub_){
+    printf("    hello from Net::update_max_col_buffer_count()\n");
+    int new_count = col_buffer_stub_.count();
+    max_col_buffer_count_ = std::max(new_count, max_col_buffer_count_);
 }
 
 INSTANTIATE_CLASS(Net);

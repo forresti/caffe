@@ -31,7 +31,11 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage.
   int height_out = (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
   int width_out = (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
-  col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out);
+  //col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out);
+  // col_buffer_stub_ is never allocated; just used for tracking dims when col_buffer_ is shared across layers.
+  col_buffer_stub_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out); 
+  col_buffer_ = &col_buffer_stub_;
+
   // Set the parameters
   CHECK_EQ(NUM_OUTPUT_ % GROUP_, 0)
       << "Number of output should be multiples of group.";
@@ -83,8 +87,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::SetUpPost(Net<Dtype> *net) {
   //at this point, the col_buffer_ has a size from SetUp(), but it has not been allocated yet.
-  //net->update_max_col_buffer_size(col_buffer_); //pass the col_buffer_ dims to the net
-  //col_buffer_ = net->col_buffer_shared_; 
+  net->update_max_col_buffer_count(col_buffer_stub_); //pass the col_buffer_ dims to the net
+  //col_buffer_ = net->col_buffer_shared_; //TODO: use pointers. 
 }
 #endif
 
@@ -93,11 +97,12 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
+  Dtype* col_data = col_buffer_->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
+  assert(col_buffer_->count() >= col_buffer_stub_.count());
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
@@ -126,8 +131,8 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
-  Dtype* col_diff = col_buffer_.mutable_cpu_diff();
+  Dtype* col_data = col_buffer_->mutable_cpu_data();
+  Dtype* col_diff = col_buffer_->mutable_cpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 

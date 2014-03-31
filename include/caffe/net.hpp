@@ -91,10 +91,9 @@ class Net {
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
  
   //for sizing col_buffer_shared_ appropriately 
-  void update_max_col_buffer_size(Blob<Dtype> const &col_buffer_stub_);
+  void update_max_col_buffer_count(Blob<Dtype> const &col_buffer_stub_);
   //im2col temporary storage
-  Blob<Dtype>* col_buffer_shared_;
-
+  Blob<Dtype> col_buffer_shared_;
 
  protected:
   // Function to get misc parameters, e.g. the learning rate multiplier and
@@ -131,6 +130,8 @@ class Net {
   vector<float> params_lr_;
   // the weight decay multipliers
   vector<float> params_weight_decay_;
+  // sizeof(Dtype)*max_col_buffer_count_ is the # of bytes in shared im2col buffer
+  int max_col_buffer_count_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

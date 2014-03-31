@@ -336,7 +336,9 @@ class ConvolutionLayer : public Layer<Dtype> {
   int WIDTH_;
   int NUM_OUTPUT_;
   int GROUP_;
-  Blob<Dtype> col_buffer_;
+  Blob<Dtype>* col_buffer_;
+  // never allocated; just for tracking dimensions
+  Blob<Dtype> col_buffer_stub_;
   shared_ptr<SyncedMemory> bias_multiplier_;
   bool biasterm_;
   int M_;

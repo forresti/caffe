@@ -15,13 +15,15 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  //Dtype* col_data = col_buffer_.mutable_gpu_data();
+  Dtype* col_data = col_buffer_->mutable_gpu_data();
 
+  #if 0
   Blob<Dtype> col_buffer_local_;
   int height_out = (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
   int width_out = (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
   col_buffer_local_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out); //freed by destructor at end of this function.
   Dtype* col_data = col_buffer_local_.mutable_gpu_data();
+  #endif
 
   const Dtype* weight = this->blobs_[0]->gpu_data();
   int weight_offset = M_ * K_;
@@ -57,8 +59,8 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   const Dtype* bottom_data = (*bottom)[0]->gpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-  Dtype* col_data = col_buffer_.mutable_gpu_data();
-  Dtype* col_diff = col_buffer_.mutable_gpu_diff();
+  Dtype* col_data = col_buffer_->mutable_gpu_data();
+  Dtype* col_diff = col_buffer_->mutable_gpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 
