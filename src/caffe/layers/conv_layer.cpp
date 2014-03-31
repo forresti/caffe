@@ -61,7 +61,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     shared_ptr<Filler<Dtype> > weight_filler(
         GetFiller<Dtype>(this->layer_param_.weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
-    // If necessary, intiialize and fill the bias term
+    // If necessary, initialize and fill the bias term
     if (biasterm_) {
       this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, NUM_OUTPUT_));
       shared_ptr<Filler<Dtype> > bias_filler(
@@ -83,14 +83,12 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 // for shared im2col buf allocation
 // note: if SetUpPost() is never called, then we fall back to 
 //       using a separate im2col buffer for each conv layer.
-#if 1
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::SetUpPost(Net<Dtype> *net) {
   //at this point, the col_buffer_ has a size from SetUp(), but it has not been allocated yet.
-  net->update_max_col_buffer_count(col_buffer_stub_); //pass the col_buffer_ dims to the net
-  //col_buffer_ = net->col_buffer_shared_; //TODO: use pointers. 
+  net->update_max_col_buffer_count(col_buffer_stub_); //passing this layer's col_buffer_ dims to the net
+  //col_buffer_ = &(net->col_buffer_shared_);  
 }
-#endif
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -135,6 +133,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* col_diff = col_buffer_->mutable_cpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
+  assert(col_buffer_->count() >= col_buffer_stub_.count());
 
   if (biasterm_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();

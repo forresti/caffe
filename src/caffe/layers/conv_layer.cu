@@ -16,6 +16,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   Dtype* col_data = col_buffer_->mutable_gpu_data();
+  assert(col_buffer_->count() >= col_buffer_stub_.count());
 
   #if 0
   Blob<Dtype> col_buffer_local_;
@@ -63,6 +64,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* col_diff = col_buffer_->mutable_gpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
+  assert(col_buffer_->count() >= col_buffer_stub_.count());
 
   if (biasterm_) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
