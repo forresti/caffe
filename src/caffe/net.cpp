@@ -378,7 +378,6 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
 
 template <typename Dtype>
 void Net<Dtype>::update_max_col_buffer_count(Blob<Dtype> const &col_buffer_stub_){
-    printf("    hello from Net::update_max_col_buffer_count()\n");
     int new_count = col_buffer_stub_.count();
     max_col_buffer_count_ = std::max(new_count, max_col_buffer_count_);
 }
