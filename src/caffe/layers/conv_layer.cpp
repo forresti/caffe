@@ -31,7 +31,6 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage.
   int height_out = (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
   int width_out = (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
-  //col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out);
   // col_buffer_stub_ is never allocated; just used for tracking dims when col_buffer_ is shared across layers.
   col_buffer_stub_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out); 
   col_buffer_ = &col_buffer_stub_;
