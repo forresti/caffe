@@ -23,10 +23,10 @@ using namespace std;
 //class that defines the data structure returned by the 
 class timeStamp{
     public:
-        float startTime;
-        float endTime;
-        int phoneName;
-        int numLines; 
+    float startTime;
+    float endTime;
+    int phoneName;
+    int numLines; 
 };
 
 vector<string> audioFileList(string fileName);
@@ -79,8 +79,8 @@ std::vector< vector<float> > readMFCC(std::string fileName)
         //go to the start of data
         mfccFile.seekg(12);
 
-        std::cout<<"numSamples"<<nSamples<<"\n";
-        std::cout<<"sampSize"<<sampSize<<"\n";
+        std::cout<<"    numSamples: "<<nSamples<<"\n";
+        std::cout<<"    sampSize: "<<sampSize<<"\n";
 
         int lineNum=0;
         //iterate through all the lines
@@ -102,9 +102,8 @@ std::vector< vector<float> > readMFCC(std::string fileName)
         }
         // std::cout<<round(features[lineNum][0])<<"\n";
     }
-    //}
-mfccFile.close();
-return features;
+    mfccFile.close();
+    return features;
 }
 
 
@@ -206,7 +205,7 @@ vector<int> timitToMfccLabel(int sizeMFCC, vector<timeStamp> ts)
     // float labelTime[219],mfccTime[219];
 
 
-    std::cout<<"sizeMfccTime"<<sizeMFCC<<'\n';
+    std::cout<<"    sizeMfccTime: "<<sizeMFCC<<'\n';
     int j=0;  //index that iterates through the lines of the label file
     for (int i=0;i<sizeMFCC;i++)
     {
@@ -224,7 +223,7 @@ vector<int> timitToMfccLabel(int sizeMFCC, vector<timeStamp> ts)
         //mfccLabel[i]=1;
         //std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
     }
-    std::cout<<"LabelSize"<<j<<'\n';
+    std::cout<<"    LabelSize: "<<j<<'\n';
     return mfccLabel;
 }
 
@@ -277,6 +276,7 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
         mfccTotal+=sizeMFCC;
         mfccLabel=timitToMfccLabel(sizeMFCC,ts);
 
+        cout << "    window labels for this file: ";
         for(int windowID=0;windowID<floor(sizeMFCC/windowSize);++windowID)
         { 
             for(int sampID=0;sampID<windowSize;sampID++)
@@ -289,7 +289,7 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
                 }
             }
 
-            std::cout<<(mfccLabel[windowID*windowSize+1])<<"\n";
+            std::cout<< " " << (mfccLabel[windowID*windowSize+1]);
 
             //write current frame to leveldb
             datum.set_data((char*)pixels, numCoeff*windowSize);
@@ -300,11 +300,13 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
             db->Put(leveldb::WriteOptions(), std::string(key), value);
             ++dbCount; 
         }
+        cout << endl; //end of line for current window label list
+        cout << endl; //done with printfs for this MFCC file
     }
 
-    std::cout<<"numFiles"<<fileList.size()<<"\n";
-    std::cout<<"total mfcc:"<<mfccTotal<<"\n";
-    std::cout<<"dbCount"<<dbCount<<"\n";
+    std::cout<<"numFiles: "<<fileList.size()<<"\n";
+    std::cout<<"total mfcc: "<<mfccTotal<<"\n";
+    std::cout<<"dbCount: "<<dbCount<<"\n";
 
 }
 
