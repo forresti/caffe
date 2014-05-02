@@ -28,9 +28,7 @@ class timeStamp{
         int phoneName;
         int numLines; 
 };
-//class mfccFeat{
-//    vector<float> mfcc; 
-//};
+
 vector<string> audioFileList(string fileName);
 
 uint32_t swap_endian( uint32_t val )
@@ -45,20 +43,19 @@ uint16_t swap_endian16( uint16_t val )
 
 float reverseFloat( const float inFloat)
 {
-        float retVal;
-        char *ftoC=(char*) & inFloat;
-        char *retF=(char*) & retVal;
+    float retVal;
+    char *ftoC=(char*) & inFloat;
+    char *retF=(char*) & retVal;
 
-        retF[0]=ftoC[3];
-        retF[1]=ftoC[2];
-        retF[2]=ftoC[1];
-        retF[3]=ftoC[0];
+    retF[0]=ftoC[3];
+    retF[1]=ftoC[2];
+    retF[2]=ftoC[1];
+    retF[3]=ftoC[0];
     return retVal;
 }
 
-
- std::vector< vector<float> > readMFCC(std::string fileName)
- {
+std::vector< vector<float> > readMFCC(std::string fileName)
+{
     uint32_t nSamples,samplePeriod;
     uint16_t sampSize,parmKind;
     float data;
@@ -69,46 +66,46 @@ float reverseFloat( const float inFloat)
 
     if(mfccFile.is_open())
     {
-    //read the header
-      mfccFile.read((char*)(&nSamples), 4);
-      nSamples = swap_endian(nSamples);
-      mfccFile.read((char*)(&samplePeriod), 4);
-      samplePeriod =swap_endian(samplePeriod);
-      mfccFile.read((char*)(&sampSize), 2); //MFCC vector length in BYTES (e.g. 13-d mfcc float -> sampSize=56)
-      sampSize =swap_endian16(sampSize);
-      mfccFile.read((char*)(&parmKind), 2);
-      parmKind =swap_endian16(parmKind);
+        //read the header
+        mfccFile.read((char*)(&nSamples), 4);
+        nSamples = swap_endian(nSamples);
+        mfccFile.read((char*)(&samplePeriod), 4);
+        samplePeriod =swap_endian(samplePeriod);
+        mfccFile.read((char*)(&sampSize), 2); //MFCC vector length in BYTES (e.g. 13-d mfcc float -> sampSize=56)
+        sampSize =swap_endian16(sampSize);
+        mfccFile.read((char*)(&parmKind), 2);
+        parmKind =swap_endian16(parmKind);
 
-    //go to the start of data
-    mfccFile.seekg(12);
+        //go to the start of data
+        mfccFile.seekg(12);
 
-    std::cout<<"numSamples"<<nSamples<<"\n";
-    std::cout<<"sampSize"<<sampSize<<"\n";
+        std::cout<<"numSamples"<<nSamples<<"\n";
+        std::cout<<"sampSize"<<sampSize<<"\n";
 
-int lineNum=0;
-//iterate through all the lines
+        int lineNum=0;
+        //iterate through all the lines
         for(lineNum=0;lineNum<nSamples;++lineNum)
         {
-        vector<float> currFeat(sampSize/4); //assume 13-d descriptors for now (could parse from file header later)
-        features.push_back(currFeat); //append currFeat[lineIdx-1][:]
-        //read the data for each line
-        for(int i=0;i<(sampSize/4);i++)
+            vector<float> currFeat(sampSize/4); //assume 13-d descriptors for now (could parse from file header later)
+            features.push_back(currFeat); //append currFeat[lineIdx-1][:]
+            //read the data for each line
+            for(int i=0;i<(sampSize/4);i++)
             {
-        //read the data(HTK saves files in Big Endian)
-        mfccFile.read((char*)(&data), 4);
-        //convert to little endian
-        data=reverseFloat(data);
-        //save it in a float array
-        features[lineNum][i]=data;
-        // pixels[i]=(uint8_t)round(data+100);
+                //read the data(HTK saves files in Big Endian)
+                mfccFile.read((char*)(&data), 4);
+                //convert to little endian
+                data=reverseFloat(data);
+                //save it in a float array
+                features[lineNum][i]=data;
+                // pixels[i]=(uint8_t)round(data+100);
             }
         }
-     // std::cout<<round(features[lineNum][0])<<"\n";
+        // std::cout<<round(features[lineNum][0])<<"\n";
     }
     //}
-    mfccFile.close();
-    return features;
- }
+mfccFile.close();
+return features;
+}
 
 
 std::vector<timeStamp> readLabel(std::string fileName)
@@ -129,25 +126,25 @@ std::vector<timeStamp> readLabel(std::string fileName)
             {   
                 timeStamps.resize( timeStamps.size() + 1 );
                 std::getline(labelFile,outputS,' ');
-       //         std::cout<<"out"<<outputS<<'\n';
+                //std::cout<<"out"<<outputS<<'\n';
                 timeStamps[i/3].startTime=::atof(outputS.c_str());
                 //float dummy = ::atof(outputS.c_str());
-       //         std::cout<<timeStamps[i/3].startTime<<'\n';
+                //std::cout<<timeStamps[i/3].startTime<<'\n';
                 i++;
             }
             else if((i)%3==1)
             {
                 std::getline(labelFile,outputS,' ');
-        //        std::cout<<"out"<<outputS<<'\n';
+                //std::cout<<"out"<<outputS<<'\n';
                 timeStamps[i/3].endTime=::atof(outputS.c_str());
-        //        std::cout<<timeStamps[i/3].endTime<<'\n';
+                //std::cout<<timeStamps[i/3].endTime<<'\n';
                 i++;
             }
 
             else
             {
                 std::getline(labelFile,outputS,'\n');
-        //        std::cout<<"out"<<outputS<<'\n';
+                //std::cout<<"out"<<outputS<<'\n';
 
                 if(outputS=="h#") timeStamps[i/3].phoneName=0;
                 else if(outputS=="aa") timeStamps[i/3].phoneName=1;
@@ -205,27 +202,27 @@ vector<int> timitToMfccLabel(int sizeMFCC, vector<timeStamp> ts)
 {
     vector<int> mfccLabel;
     //int mfccLabel[sizeMFCC]; 
-   float labelTime[sizeMFCC],mfccTime[sizeMFCC];
-   // float labelTime[219],mfccTime[219];
+    float labelTime[sizeMFCC],mfccTime[sizeMFCC];
+    // float labelTime[219],mfccTime[219];
 
 
     std::cout<<"sizeMfccTime"<<sizeMFCC<<'\n';
     int j=0;  //index that iterates through the lines of the label file
     for (int i=0;i<sizeMFCC;i++)
     {
-    mfccTime[i]=12.5+(i+1)*10; //real time in ms, i is the mfccID here
-    //std::cout<<"mfccTime"<<mfccTime[i]<<'\n';
+        mfccTime[i]=12.5+(i+1)*10; //real time in ms, i is the mfccID here
+        //std::cout<<"mfccTime"<<mfccTime[i]<<'\n';
 
-    labelTime[j]=ts[j].endTime*pow(10,-4); //real time in ms
-    //std::cout<<"labelTime"<<labelTime[j]<<'\n';
-    if(mfccTime[i]<labelTime[j]) {}
-    else {j++;}
+        labelTime[j]=ts[j].endTime*pow(10,-4); //real time in ms
+        //std::cout<<"labelTime"<<labelTime[j]<<'\n';
+        if(mfccTime[i]<labelTime[j]) {}
+        else {j++;}
 
         mfccLabel.resize( mfccLabel.size() + 1 );
-    mfccLabel[i]=ts[j].phoneName;
-   // std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
-    //mfccLabel[i]=1;
- //   std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
+        mfccLabel[i]=ts[j].phoneName;
+        //std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
+        //mfccLabel[i]=1;
+        //std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
     }
     std::cout<<"LabelSize"<<j<<'\n';
     return mfccLabel;
@@ -248,11 +245,11 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
     options.create_if_missing = true;
     options.error_if_exists = true;
     leveldb::Status status = leveldb::DB::Open(
-        options, db_filename, &db);
+            options, db_filename, &db);
     CHECK(status.ok()) << "Failed to open leveldb " << db_filename
-      << ". Is it already existing?";
- 
-   int numCoeff=23;
+        << ". Is it already existing?";
+
+    int numCoeff=23;
     //initialize the data structure
     caffe::Datum datum;
     datum.set_channels(1);
@@ -263,22 +260,22 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
     mfccTotal=0;
     char* pixels=new char[numCoeff*windowSize];
     fileList=audioFileList(listFile);
- 
-   for(int i=0; i<fileList.size();i++)
+
+    for(int i=0; i<fileList.size();i++)
     {
-/*
-    labelFileName=fileList[i]+"lab";
-    std::cout<<i<<labelFileName<<"\n";
-*/
+        /*
+           labelFileName=fileList[i]+"lab";
+           std::cout<<i<<labelFileName<<"\n";
+         */
 
-    mfccFileName=fileList[i]+"fea";
-    labelFileName=fileList[i]+"lab";
+        mfccFileName=fileList[i]+"fea";
+        labelFileName=fileList[i]+"lab";
 
-    ts=readLabel(labelFileName);
-    mfcc=readMFCC(mfccFileName);
-    sizeMFCC=mfcc.size(); 
-    mfccTotal+=sizeMFCC;
-    mfccLabel=timitToMfccLabel(sizeMFCC,ts);
+        ts=readLabel(labelFileName);
+        mfcc=readMFCC(mfccFileName);
+        sizeMFCC=mfcc.size(); 
+        mfccTotal+=sizeMFCC;
+        mfccLabel=timitToMfccLabel(sizeMFCC,ts);
 
         for(int windowID=0;windowID<floor(sizeMFCC/windowSize);++windowID)
         { 
@@ -286,25 +283,23 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
             {
                 for(int dataID=0;dataID<numCoeff;dataID++)
                 {
-                pixels[sampID*numCoeff+dataID]=(char)(round(5*mfcc[(windowID*windowSize)+sampID][dataID])-0);                
-                //std::cout<<(mfcc[(windowID*windowSize)+sampID][dataID])<<"\n";
-                //std::cout<<(int32_t)pixels[sampID*numCoeff+dataID]<<"\n";
+                    pixels[sampID*numCoeff+dataID]=(char)(round(5*mfcc[(windowID*windowSize)+sampID][dataID])-0);                
+                    //std::cout<<(mfcc[(windowID*windowSize)+sampID][dataID])<<"\n";
+                    //std::cout<<(int32_t)pixels[sampID*numCoeff+dataID]<<"\n";
                 }
             }
-             
-std::cout<<(mfccLabel[windowID*windowSize+1])<<"\n";
 
-        //write to the level db for each frame
-        datum.set_data((char*)pixels, numCoeff*windowSize);
-      //  datum.set_data(pixels, numCoeff*windowSize);
-        datum.set_label((char)mfccLabel[windowID*windowSize+1]);
-        datum.SerializeToString(&value);
-        sprintf(key, "%08d", dbCount);
-        db->Put(leveldb::WriteOptions(), std::string(key), value);
-        ++dbCount; 
+            std::cout<<(mfccLabel[windowID*windowSize+1])<<"\n";
+
+            //write current frame to leveldb
+            datum.set_data((char*)pixels, numCoeff*windowSize);
+            //  datum.set_data(pixels, numCoeff*windowSize);
+            datum.set_label((char)mfccLabel[windowID*windowSize+1]);
+            datum.SerializeToString(&value);
+            sprintf(key, "%08d", dbCount);
+            db->Put(leveldb::WriteOptions(), std::string(key), value);
+            ++dbCount; 
         }
-
-
     }
 
     std::cout<<"numFiles"<<fileList.size()<<"\n";
@@ -318,60 +313,44 @@ vector<string> audioFileList(string fileName)
     int i;
     string output;
     vector<string> filePathList;
- //open the list file
+    //open the list file
     std::ifstream listFile(fileName.c_str(), std::ios::in);
 
     if(listFile.is_open())
     {
-    //for (fileid=0;fileid<200;fileid++)
+        //for (fileid=0;fileid<200;fileid++)
         while(!listFile.eof())
         {
-        //read one line at a time
-        listFile>>output;
+            //read one line at a time
+            listFile>>output;
 
             if(listFile.eof()==1)break;
-        filePathList.resize( filePathList.size() + 1 );
+            filePathList.resize( filePathList.size() + 1 );
             output.resize(output.size()-3);
             filePathList[i]=output;
             i++;
-/*
-for(j=1;j<strlen(output);j++)
-{
-if(j<4) labelChar[j-1]=output[j];
-else if (j==4) {}
-else path[j-5]=output[j];
-} //end position of = and [ in a file name
-
-//path[strlen(output)-5]='\0';
-path[strlen(output)-5]='.';
-path[strlen(output)-4]='h';
-path[strlen(output)-3]='t';
-path[strlen(output)-2]='k';
-*/
-        
         }
     }
     listFile.close();
     return filePathList;
 }
 
-
 /*
 usage: ./executable fileList leveldbName
-*/
+ */
 
 int main (int argc, char** argv)
 {
-     
+
     int windowSize=3;
-/*    char* dbName=new char[200];
-    dbName=argv[2];
-    char* listFile=new char[200];
-    listFile=argv[1];
-*/
+    /*    char* dbName=new char[200];
+          dbName=argv[2];
+          char* listFile=new char[200];
+          listFile=argv[1];
+     */
     writeToLeveldb(argv[2],argv[1],windowSize);
 
-return 0;
+    return 0;
 }
 
 
