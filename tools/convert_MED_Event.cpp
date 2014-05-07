@@ -21,6 +21,12 @@ arg2: leveldb file
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/shared_ptr.hpp>
+
+using boost::shared_ptr;
+using namespace std;
+typedef boost::mt19937::result_type rv_t; //for boost rand number gen
 
 uint32_t swap_endian( uint32_t val )
 {
@@ -45,8 +51,37 @@ float reverseFloat( const float inFloat)
     return retVal;
 }
 
+//rand unsigned key for leveldb (to avoid having many adjacent leveldb items that are the same category) 
+uint64_t my_rand_key(boost::mt19937& gen){
+    assert( sizeof( rv_t ) == 4 );
+    uint64_t val = (uint64_t(gen()) << 32) + gen();
+    return val;
+}
+
+bool checkIfKeyExists(const string& key, leveldb::DB* db)
+{
+    leveldb::Iterator* it =  db->NewIterator(leveldb::ReadOptions()); 
+    it->Seek(key);
+    return ( it->Valid() && (it->key() == (leveldb::Slice)key) ); //check if key exists in db already
+}
+
+//void test_checkIfKeyExists(leveldb::DB* db, shared_ptr<leveldb::Iterator> it)
+void test_checkIfKeyExists(leveldb::DB* db)
+{
+    string value = "ohai";
+    string key = "12345";
+    db->Put(leveldb::WriteOptions(), key, value); 
+
+    bool exist = checkIfKeyExists(key, db);
+    if(exist == true)
+        printf("    successfully identified a key that exists \n");
+    else
+        printf("    FAILED to find a key that exists \n");
+}
+
 int main(int argc, char** argv)
 {
+    boost::mt19937 gen;
     int i,j,rows,cols,fileid,label;
 
     uint32_t length,numFrames,numFloatsWindow;
@@ -64,6 +99,7 @@ int main(int argc, char** argv)
 
     char labelC;
     char key[10];
+    //char key[8]; //uint64_t
     std::string value;
     caffe::Datum datum;
     char* db_filename=new char[200];
@@ -79,6 +115,8 @@ int main(int argc, char** argv)
     CHECK(status.ok()) << "Failed to open leveldb " << db_filename
         << ". Is it already existing?";
 
+    //test_checkIfKeyExists(db);
+    
     //open the list file
     std::ifstream trainFile(argv[1], std::ios::in);
     dbCount=0;
@@ -161,13 +199,22 @@ int main(int argc, char** argv)
                         pixels[i]=(char)round(data+100);
                     }
 
-
                     //write to the level db for each frame
                     datum.set_data(pixels, numFloatsWindow);
                     datum.set_label((char)labelInt);
                     datum.SerializeToString(&value);
-                    sprintf(key, "%08d", dbCount);
-                    db->Put(leveldb::WriteOptions(), std::string(key), value);
+                    //sprintf(key, "%08d", dbCount);
+                    uint64_t rand_key = my_rand_key(gen);
+                    //sprintf(key, "%08lu", rand_key);
+                    //cout << "key = " << rand_key << endl;
+                    string rand_key_str = string( (char*)&rand_key, (char*)&rand_key+8 );
+                    //db->Put(leveldb::WriteOptions(), std::string(key), value);
+                    while( checkIfKeyExists(rand_key_str, db) )
+                    {
+                        rand_key = my_rand_key(gen); //fresh key if current key is already in use
+                        rand_key_str = string( (char*)&rand_key, (char*)&rand_key+8 ); 
+                    }
+                    db->Put(leveldb::WriteOptions(), rand_key_str, value); //TODO: check success/fail
                     ++dbCount;
                 }
             }//end of mfcc file is open
