@@ -2,9 +2,8 @@
    Khalid Ashraf 2014
    Program to obtain the file path and MFCC start and 
    end location from the text file containing file names.
+*/
 
-//next extension: do it for multiple files
- */
 #include <google/protobuf/text_format.h>
 #include <glog/logging.h>
 #include <leveldb/db.h>
@@ -106,7 +105,7 @@ std::vector< vector<float> > readMFCC(std::string fileName)
     return features;
 }
 
-
+// read phone annotations from one file
 std::vector<timeStamp> readLabel(std::string fileName)
 {
     std::vector<timeStamp> timeStamps;
@@ -121,7 +120,9 @@ std::vector<timeStamp> readLabel(std::string fileName)
         {
             //read one line at a time
 
-            if((i)%3==0)
+            //lines look like this: startTime endTime phoneLabel
+
+            if((i)%3==0) 
             {   
                 timeStamps.resize( timeStamps.size() + 1 );
                 std::getline(labelFile,outputS,' ');
@@ -142,6 +143,8 @@ std::vector<timeStamp> readLabel(std::string fileName)
 
             else
             {
+                //mapping from standard 39 TIMIT phone labels to numbers
+
                 std::getline(labelFile,outputS,'\n');
                 //std::cout<<"out"<<outputS<<'\n';
 
@@ -200,7 +203,6 @@ std::vector<timeStamp> readLabel(std::string fileName)
 vector<int> timitToMfccLabel(int sizeMFCC, vector<timeStamp> ts)
 {
     vector<int> mfccLabel;
-    //int mfccLabel[sizeMFCC]; 
     float labelTime[sizeMFCC],mfccTime[sizeMFCC];
     // float labelTime[219],mfccTime[219];
 
@@ -219,8 +221,6 @@ vector<int> timitToMfccLabel(int sizeMFCC, vector<timeStamp> ts)
 
         mfccLabel.resize( mfccLabel.size() + 1 );
         mfccLabel[i]=ts[j].phoneName;
-        //std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
-        //mfccLabel[i]=1;
         //std::cout<<"mfccLabel"<<mfccLabel[i]<<'\n';
     }
     std::cout<<"    LabelSize: "<<j<<'\n';
@@ -284,8 +284,6 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
                 for(int dataID=0;dataID<numCoeff;dataID++)
                 {
                     pixels[sampID*numCoeff+dataID]=(char)(round(5*mfcc[(windowID*windowSize)+sampID][dataID])-0);                
-                    //std::cout<<(mfcc[(windowID*windowSize)+sampID][dataID])<<"\n";
-                    //std::cout<<(int32_t)pixels[sampID*numCoeff+dataID]<<"\n";
                 }
             }
 
