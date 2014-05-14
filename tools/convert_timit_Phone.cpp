@@ -342,7 +342,8 @@ usage: ./executable fileList leveldbName
 int main (int argc, char** argv)
 {
 
-    int windowSize=3;
+    //int windowSize=3;
+    int windowSize=23; //same size as TNet's postprocessed MFCC descriptors... square windows.
     /*    char* dbName=new char[200];
           dbName=argv[2];
           char* listFile=new char[200];

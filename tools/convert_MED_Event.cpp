@@ -172,13 +172,13 @@ int main(int argc, char** argv)
                 mfccFile.seekg(12);
 
                 numFloats=(nSamples)*(sampSize/4);
+                cols=sampSize/4; //length of MFCC descriptor per frame
                 //rows=(int)floor(nSamples/10);
-                rows=30;
-                cols=sampSize/4;
+                //rows=30; //context window size
+                rows=cols; //square context window (so Caffe has an easier time with conv layers)
                 numFloatsWindow=rows*(sampSize/4);
                 dataArray=new float[numFloatsWindow];
                 std::cout<<"numSamples"<<nSamples<<"\n";
-
                 char* pixels=new char[numFloatsWindow];
                 //initialize the data structure
                 datum.set_channels(1);
@@ -186,6 +186,7 @@ int main(int argc, char** argv)
                 datum.set_width(sampSize/4); //mfcc axis
                 numFrames=(uint32_t)floor((nSamples)/rows);
 
+printf("nSamples=%d, samplePeriod=%d, sampSize=%d, parmKind=%d, rows=%d, cols=%d, numFloatsWindow=%d \n", (int)nSamples, (int)samplePeriod, (int)sampSize, (int)parmKind, (int)rows, (int)cols, (int)numFloatsWindow);
                 //read the data and write to db for each frame
                 for(frameid=0;frameid<numFrames;++frameid)
                 {

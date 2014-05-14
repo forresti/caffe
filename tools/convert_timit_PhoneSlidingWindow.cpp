@@ -250,7 +250,7 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
     CHECK(status.ok()) << "Failed to open leveldb " << db_filename
       << ". Is it already existing?";
  
-   int numCoeff=23;
+   int numCoeff=368;
     //initialize the data structure
     caffe::Datum datum;
     datum.set_channels(1);
@@ -285,7 +285,7 @@ void writeToLeveldb(char* db_filename,char* listFile,int windowSize)
             {
                 for(int dataID=0;dataID<numCoeff;dataID++)
                 {
-                pixels[sampID*numCoeff+dataID]=(char)round(5*mfcc[(windowID)+sampID][dataID]);
+                pixels[sampID*numCoeff+dataID]=(char)round(20*mfcc[(windowID)+sampID][dataID]);
                 }
             }
              
