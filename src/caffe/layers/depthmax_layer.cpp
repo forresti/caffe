@@ -11,12 +11,24 @@ namespace caffe {
 
 //argmax_layer is a bit different -- it takes the top-k argmax across all elements in a layer (e.g. "get the indices of top-5 categories")
 
+
+//testing:
+//  ./build/tools/caffe time -model=toy_alexnet_depthMax.prototxt
+//  TODO: dedicated test file
+
+/*
+bool depthmax_sort(my_pair& left, my_pair& right)
+{
+  return left.first < right.first;
+}
+*/
+
 template <typename Dtype>
 void DepthMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  int top_k_ = this->layer_param_.depthmax_param().top_k();
+  int top_k_ = this->layer_param_.depthmax_param().top_k(); //number of channel indicies to preserve (zero out the rest.)
 
   printf("in DepthMaxLayer::Forward_cpu(). top_k = %d \n", top_k_);
 
@@ -34,10 +46,33 @@ void DepthMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         for (int c = 0; c < bottom[0]->channels(); c++) {
           channel_vector[c] = 
               std::make_pair(bottom_data[base_idx + (c * bottom[0]->height() * bottom[0]->width())], c);
+        }
+        //sort channels from highest to lowest value, and remember their original positions in the array 
+        std::partial_sort(channel_vector.begin(), channel_vector.begin() + top_k_,
+                          channel_vector.end(), std::greater<std::pair<Dtype, int> >());
 
-          //TODO: sort channel_vector 
+#if 0
+        printf("  (b=%d, y=%d, x=%d), top k channels:", b, y, x);
+        for(int k=0; k<top_k_; k++){
+          printf("    [channel=%d, value=%f] ", channel_vector[k].second, channel_vector[k].first);
+        }
+        printf("\n");
+#endif
 
-          //TODO: zero out all but top_k elements per channel
+        //zero out all but top_k elements per channel
+        for(int c = 0; c < bottom[0]->channels(); c++) {
+
+          //is this channel in the top k?
+          bool preserve_channel = false;
+          for(int k=0; k<top_k_; k++){
+            if(channel_vector[k].second == c)
+              preserve_channel = true;
+          }
+
+          //if channel isn't in top-k, then zero it out.
+          if(!preserve_channel){
+            top_data[base_idx + (c * bottom[0]->height() * bottom[0]->width())] = 0;
+          }
         }
       }
     }
