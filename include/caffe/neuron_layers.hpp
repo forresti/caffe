@@ -353,6 +353,31 @@ class PowerLayer : public NeuronLayer<Dtype> {
   Dtype diff_scale_;
 };
 
+template <typename Dtype>
+class DepthMaxLayer : public NeuronLayer<Dtype> {
+ public:
+  
+  explicit DepthMaxLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_DEPTHMAX;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //    const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  //virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  size_t top_k_;
+};
+
+
 /**
  * @brief Rectified Linear Unit non-linearity @f$ y = \max(0, x) @f$.
  *        The simple max is fast to compute, and the function does not saturate.

@@ -84,6 +84,13 @@ Layer<Dtype>* GetReLULayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(RELU, GetReLULayer);
 
+template <typename Dtype>
+Layer<Dtype>* GetDepthMaxLayer(const LayerParameter& param) {
+  //DepthMaxParameter_Engine engine = param.relu_param().engine();
+  return new DepthMaxLayer<Dtype>(param);
+}
+REGISTER_LAYER_CREATOR(DEPTHMAX, GetDepthMaxLayer);
+
 // Get sigmoid layer according to engine.
 template <typename Dtype>
 Layer<Dtype>* GetSigmoidLayer(const LayerParameter& param) {

@@ -271,6 +271,7 @@ message LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+    DEPTHMAX = 40; //Forrest
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -301,6 +302,7 @@ message LayerParameter {
 
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
+  optional DepthMaxParameter depthmax_param = 44; //Forrest
   optional ConcatParameter concat_param = 9;
   optional ContrastiveLossParameter contrastive_loss_param = 40;
   optional ConvolutionParameter convolution_param = 10;
@@ -367,6 +369,13 @@ message AccuracyParameter {
   // the top k scoring classes.  By default, only compare to the top scoring
   // class (i.e. argmax).
   optional uint32 top_k = 1 [default = 1];
+}
+
+// Message that stores parameters used by ArgMaxLayer
+message DepthMaxParameter {
+  // If true produce pairs (argmax, maxval)
+  optional bool out_max_val = 1 [default = false];
+  optional uint32 top_k = 2 [default = 1];
 }
 
 // Message that stores parameters used by ArgMaxLayer
