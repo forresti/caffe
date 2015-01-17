@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
+#include "caffe/proto/caffe.pb.h" //for layer type enums
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -190,6 +191,14 @@ int test() {
 }
 RegisterBrewFunction(test);
 
+double conv_gflops_to_perform(int num, int channels_in, int height_in, int width_in,
+                              int group, int kernelSize, int convStride, int num_output)
+{
+  double gflops = ((double)height_in * width_in * channels_in *
+                    kernelSize * kernelSize * num_output * num * 2) //*2 is for multiply+add
+                    / ((double)convStride * convStride * group * 1e9);
+  return gflops;
+}
 
 // Time: benchmark the execution time of a model.
 int time() {
@@ -262,9 +271,37 @@ int time() {
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
+    double gflops_to_perform = 0;
+//Forrest...
+    if(layers[i]->layer_param().has_convolution_param()){
+      LOG(INFO) << "conv layer";
+      //TODO flop count here.
+
+      //verify that dimensions exist...
+      int kernel_size = layers[i]->layer_param().convolution_param().kernel_size();
+      int stride = layers[i]->layer_param().convolution_param().stride();
+      int group = layers[i]->layer_param().convolution_param().group(); //TODO: test for has_group?
+      //int num_output = layers[i]->layer_param().convolution_param().num_output();
+
+      int num = bottom_vecs[i][0]->num();
+      int channels_in = bottom_vecs[i][0]->channels();
+      int height_in = bottom_vecs[i][0]->height();
+      int width_in = bottom_vecs[i][0]->width();
+      int num_output = top_vecs[i][0]->channels(); //# filters in this layer
+      gflops_to_perform = conv_gflops_to_perform(num, channels_in, height_in, width_in,
+                                                 group, kernel_size, stride, num_output); 
+    }
+
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
+
+    if(gflops_to_perform > 0){
+      double gflops_per_sec = gflops_to_perform / (forward_time_per_layer[i] / 1000000 / FLAGS_iterations); //divide by 1,000,000 for microsec -> sec
+      LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
+        "\tforward: performed " << gflops_to_perform << " gflops at a rate of " << gflops_per_sec << " gflops/s";
+    }
+
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
